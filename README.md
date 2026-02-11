@@ -1,16 +1,81 @@
-# kidsecure
+# 🎓 KidSecure - Smart School Attendance & Bus Tracking System
 
-A new Flutter project.
+KidSecure is a Flutter-based mobile application developed as a graduation project. It simulates a smart school safety and attendance system that helps schools track student attendance, notify parents in real-time, and monitor school buses live — combining security, organization, and modern technology.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
 
-A few resources to get you started if this is your first Flutter project:
+### 👨‍👩‍👧 Parents
+- Receive notifications on student arrival and departure.
+- Send pickup requests.
+- Track school buses in real-time.
+- Get alerts before bus arrival.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 🚪 Gate Officers
+- Check-in and check-out students using QR codes.
+- Manually register students when cards are forgotten.
+- Receive and manage pickup requests.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🚌 Bus Drivers
+- Register students during boarding.
+- Share live location.
+- Send arrival notifications.
+
+### 🏫 School Administration
+- Create and manage user accounts and roles.
+- Monitor attendance and absence.
+- View dashboard statistics.
+- Send emergency broadcast messages.
+
+---
+
+## 🧠 Technical Overview
+
+- **Flutter** Mobile Application
+- **Multi-role permission system**
+- **Real-time notifications**
+- **Live location tracking** (educational simulation)
+- **Attendance management system**
+- **Admin dashboard**
+
+---
+
+## 🛠️ Tech Stack
+
+- Flutter
+- Firebase Authentication
+- Cloud Firestore
+- Firebase Cloud Messaging
+- Google Maps / Location Services (simulated)
+- State Management: Bloc / Riverpod
+
+---
+
+## 📱 Screens
+
+- Login & Role Selection
+- Parent Dashboard
+- Gate Officer QR Scanner
+- Bus Driver Route & Boarding
+- Admin Dashboard & Reports
+- Notifications & Chat
+
+---
+
+## 🧪 Project Status
+
+🚧 Educational prototype — not for production use.
+
+---
+
+## 👨‍💻 Developed By
+
+**Mohamed Shibl**  
+Flutter Developer | Graduation Project
+
+---
+
+## 📄 License
+
+This project is for educational purposes only.
