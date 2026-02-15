@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: Check if user has a specific role
+    function hasRole(role) {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null; // Allow initial sign-up
+      allow update: if hasRole('admin') || request.auth.uid == userId;
+      allow delete: if hasRole('admin');
+    }
+
+    // --- Students Collection ---
+    match /students/{studentId} {
+      // Parents read their own, drivers read their bus assignments, admins read all, gate officers read all for verification
+      allow read: if hasRole('admin') || hasRole('gateOfficer') || 
+                  (hasRole('parent') && resource.data.parentId == request.auth.uid) ||
+                  (hasRole('driver') && resource.data.busId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.busId);
+      
+      allow create: if hasRole('admin') || hasRole('parent');
+      allow update, delete: if hasRole('admin') || 
+                             (hasRole('parent') && resource.data.parentId == request.auth.uid);
+    }
+
+    // --- Attendance logs ---
+    match /attendance/{logId} {
+      // Parents see attendance for their kids
+      allow read: if hasRole('admin') || hasRole('gateOfficer') || 
+                  (hasRole('parent') && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.parentId == request.auth.uid);
+      
+      // Drivers and Gate Officers create logs
+      allow create: if hasRole('driver') || hasRole('admin') || hasRole('gateOfficer');
+      
+      allow update, delete: if hasRole('admin');
+    }
+
+    // --- Notifications ---
+    match /notifications/{notifId} {
+      // 1. Read: Owner or Admin
+      allow read: if (request.auth != null && resource.data.parentId == request.auth.uid) || hasRole('admin');
+      
+      // 2. Delete: Owner or Admin
+      allow delete: if (request.auth != null && resource.data.parentId == request.auth.uid) || hasRole('admin');
+      
+      // 3. Create: Admin/Driver/GateOfficer
+      allow create: if hasRole('admin') || hasRole('driver') || hasRole('gateOfficer');
+      
+      // 4. Update: Owner (mark as read) or Admin/Driver/GateOfficer
+      allow update: if (request.auth != null && resource.data.parentId == request.auth.uid) || 
+                       hasRole('admin') || hasRole('driver') || hasRole('gateOfficer');
+    }
+
+    // --- Dismissal Requests ---
+    match /dismissal_requests/{reqId} {
+      // Admins, Drivers, and Gate Officers see requests; Parents see their own
+      allow read: if hasRole('admin') || hasRole('driver') || hasRole('gateOfficer') ||
+                  (hasRole('parent') && resource.data.parentId == request.auth.uid);
+      
+      allow create: if hasRole('parent');
+      
+      // Drivers/GateOfficers update status (processing/completed)
+      allow update: if hasRole('admin') || hasRole('driver') || hasRole('gateOfficer');
+      
+      allow delete: if hasRole('admin');
+    }
+
+    // --- Bus Live Locations ---
+    match /bus_locations/{busId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole('driver') || hasRole('admin');
+    }
+
+    // --- Broadcast Messages ---
+    match /broadcasts/{msgId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole('admin');
+    }
+  }
+}

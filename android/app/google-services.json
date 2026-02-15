@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "518772064482",
+    "project_id": "kid-86bbc",
+    "storage_bucket": "kid-86bbc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:518772064482:android:8d350c7090ede322ff5ebb",
+        "android_client_info": {
+          "package_name": "com.example.kidsecure"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHOCykYyOlrEmkF8TYDVdHv-r6xrIVzcA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
