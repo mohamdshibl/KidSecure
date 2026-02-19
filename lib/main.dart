@@ -37,6 +37,10 @@ import 'features/notifications/data/firebase_notification_repository.dart';
 import 'features/notifications/presentation/pages/notifications_history_page.dart';
 import 'features/notifications/presentation/pages/notification_details_page.dart';
 import 'features/notifications/domain/models/notification_model.dart';
+import 'features/admin/domain/repositories/stats_repository.dart';
+import 'features/admin/data/repositories/firebase_stats_repository.dart';
+import 'features/admin/presentation/pages/admin_stats_page.dart';
+import 'features/admin/presentation/bloc/stats_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +68,7 @@ void main() async {
   final broadcastRepository = FirebaseBroadcastRepository();
   final dismissalRepository = FirebaseDismissalRepository();
   final notificationRepository = FirebaseNotificationRepository();
+  final statsRepository = FirebaseStatsRepository();
 
   runApp(
     MyApp(
@@ -74,6 +79,7 @@ void main() async {
       locationService: locationService,
       broadcastRepository: broadcastRepository,
       dismissalRepository: dismissalRepository,
+      statsRepository: statsRepository,
       prefs: prefs,
     ),
   );
@@ -87,6 +93,7 @@ class MyApp extends StatelessWidget {
   final BroadcastRepository broadcastRepository;
   final DismissalRepository dismissalRepository;
   final NotificationRepository notificationRepository;
+  final StatsRepository statsRepository;
   final SharedPreferences prefs;
 
   const MyApp({
@@ -98,6 +105,7 @@ class MyApp extends StatelessWidget {
     required this.locationService,
     required this.broadcastRepository,
     required this.dismissalRepository,
+    required this.statsRepository,
     required this.prefs,
   });
 
@@ -122,6 +130,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider<NotificationRepository>.value(
           value: notificationRepository,
         ),
+        RepositoryProvider<StatsRepository>.value(value: statsRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -213,6 +222,14 @@ class _AppViewState extends State<AppView> {
             final notification = state.extra as AppNotification;
             return NotificationDetailsPage(notification: notification);
           },
+        ),
+        GoRoute(
+          path: '/admin/stats',
+          builder: (context, state) => BlocProvider(
+            create: (context) =>
+                StatsCubit(context.read<StatsRepository>())..loadStats(),
+            child: const AdminStatsPage(),
+          ),
         ),
       ],
       redirect: (context, state) {

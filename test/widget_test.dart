@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kidsecure/features/admin/data/firebase_broadcast_repository.dart';
 import 'package:kidsecure/features/attendance/data/repositories/firebase_dismissal_repository.dart';
 import 'package:kidsecure/features/notifications/data/firebase_notification_repository.dart';
+import 'package:kidsecure/features/admin/data/repositories/firebase_stats_repository.dart';
 
 void main() {
   testWidgets('App initialization test', (WidgetTester tester) async {
@@ -33,6 +34,7 @@ void main() {
         broadcastRepository: FirebaseBroadcastRepository(),
         dismissalRepository: FirebaseDismissalRepository(),
         notificationRepository: FirebaseNotificationRepository(),
+        statsRepository: FirebaseStatsRepository(),
         prefs: prefs,
       ),
     );

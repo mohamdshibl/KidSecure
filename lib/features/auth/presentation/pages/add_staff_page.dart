@@ -46,15 +46,18 @@ class AddStaffView extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: Text(
             'Add New Staff',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF1E293B),
+          backgroundColor: Colors.transparent,
           elevation: 0,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -66,6 +69,7 @@ class AddStaffView extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -91,6 +95,7 @@ class AddStaffView extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -111,6 +116,7 @@ class _BusIdInput extends StatelessWidget {
     return TextField(
       onChanged: (v) => context.read<SignUpCubit>().busIdChanged(v),
       decoration: _inputDeco(
+        context,
         'Bus ID / Route Number',
         Icons.directions_bus_outlined,
       ),
@@ -123,7 +129,7 @@ class _NameInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       onChanged: (v) => context.read<SignUpCubit>().nameChanged(v),
-      decoration: _inputDeco('Full Name', Icons.person_outline),
+      decoration: _inputDeco(context, 'Full Name', Icons.person_outline),
     );
   }
 }
@@ -134,7 +140,7 @@ class _EmailInput extends StatelessWidget {
     return TextField(
       onChanged: (v) => context.read<SignUpCubit>().emailChanged(v),
       keyboardType: TextInputType.emailAddress,
-      decoration: _inputDeco('Email Address', Icons.email_outlined),
+      decoration: _inputDeco(context, 'Email Address', Icons.email_outlined),
     );
   }
 }
@@ -145,7 +151,7 @@ class _PasswordInput extends StatelessWidget {
     return TextField(
       onChanged: (v) => context.read<SignUpCubit>().passwordChanged(v),
       obscureText: true,
-      decoration: _inputDeco('Temporary Password', Icons.lock_outline),
+      decoration: _inputDeco(context, 'Temporary Password', Icons.lock_outline),
     );
   }
 }
@@ -195,12 +201,14 @@ class _RoleOption extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.blue.shade50 : Colors.white,
+            color: isSelected
+                ? Theme.of(context).primaryColor.withOpacity(0.1)
+                : Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? Colors.blue.shade600
-                  : const Color(0xFFE2E8F0),
+                  ? Theme.of(context).primaryColor
+                  : Theme.of(context).colorScheme.outlineVariant,
               width: 2,
             ),
           ),
@@ -209,8 +217,8 @@ class _RoleOption extends StatelessWidget {
               label,
               style: GoogleFonts.inter(
                 color: isSelected
-                    ? Colors.blue.shade700
-                    : const Color(0xFF64748B),
+                    ? Theme.of(context).primaryColor
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
             ),
@@ -250,19 +258,28 @@ class _CreateButton extends StatelessWidget {
   }
 }
 
-InputDecoration _inputDeco(String hint, IconData icon) {
+InputDecoration _inputDeco(BuildContext context, String hint, IconData icon) {
   return InputDecoration(
     hintText: hint,
-    prefixIcon: Icon(icon, size: 20),
+    hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+    prefixIcon: Icon(icon, size: 20, color: Theme.of(context).primaryColor),
     filled: true,
-    fillColor: Colors.white,
+    fillColor: Theme.of(context).colorScheme.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
     ),
   );
 }

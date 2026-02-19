@@ -112,7 +112,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
                       child: Text(
                         'No students assigned to this bus.',
                         style: GoogleFonts.inter(
-                          color: const Color(0xFF64748B),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     );
@@ -225,7 +225,7 @@ class _StudentManifestItem extends StatelessWidget {
                   student.grade,
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

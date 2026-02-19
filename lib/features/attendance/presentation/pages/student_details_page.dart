@@ -25,7 +25,7 @@ class StudentDetailsPage extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            _buildProfileSection(),
+            _buildProfileSection(context),
             const SizedBox(height: 32),
             _buildQrSection(context),
             const SizedBox(height: 32),
@@ -38,13 +38,17 @@ class StudentDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(BuildContext context) {
     return Column(
       children: [
         CircleAvatar(
           radius: 50,
-          backgroundColor: Colors.blue.shade50,
-          child: const Icon(Icons.person, size: 50, color: Colors.blue),
+          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+          child: Icon(
+            Icons.person,
+            size: 50,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -55,7 +59,7 @@ class StudentDetailsPage extends StatelessWidget {
           'Grade: ${student.grade}',
           style: GoogleFonts.inter(
             fontSize: 16,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -66,8 +70,11 @@ class StudentDetailsPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white, // Keep QR card white for contrast
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.05),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -82,13 +89,13 @@ class StudentDetailsPage extends StatelessWidget {
             data: student.qrCode,
             version: QrVersions.auto,
             size: 200.0,
-            eyeStyle: const QrEyeStyle(
+            eyeStyle: QrEyeStyle(
               eyeShape: QrEyeShape.circle,
-              color: Color(0xFF1E293B),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
-            dataModuleStyle: const QrDataModuleStyle(
+            dataModuleStyle: QrDataModuleStyle(
               dataModuleShape: QrDataModuleShape.circle,
-              color: Color(0xFF1E293B),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -96,14 +103,14 @@ class StudentDetailsPage extends StatelessWidget {
             'Security Access Code',
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           Text(
             'Show this at the school gate',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -148,7 +155,7 @@ class StudentDetailsPage extends StatelessWidget {
               icon: const Icon(Icons.map_rounded),
               label: const Text('Trace Bus Live'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade600,
+                backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -220,7 +227,9 @@ class StudentDetailsPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+              style: GoogleFonts.inter(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           ElevatedButton(
@@ -270,9 +279,18 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF64748B)),
+        Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 12),
-        Text(label, style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

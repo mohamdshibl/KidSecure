@@ -6,6 +6,9 @@ import '../auth/presentation/bloc/auth_bloc.dart';
 import '../auth/presentation/bloc/auth_event.dart';
 import '../attendance/domain/models/dismissal_request.dart';
 import '../attendance/domain/repositories/dismissal_repository.dart';
+import '../attendance/domain/repositories/attendance_repository.dart';
+import '../attendance/domain/models/student_model.dart';
+import '../attendance/domain/models/attendance_record.dart';
 import '../../core/theme/theme_cubit.dart';
 
 class GateOfficerDashboard extends StatefulWidget {
@@ -23,7 +26,7 @@ class _GateOfficerDashboardState extends State<GateOfficerDashboard> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: IndexedStack(
             index: _selectedIndex,
@@ -43,8 +46,12 @@ class _GateOfficerDashboardState extends State<GateOfficerDashboard> {
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+        color: Theme.of(context).cardTheme.color,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
+          ),
+        ),
       ),
       child: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -90,7 +97,7 @@ class _RequestsView extends StatelessWidget {
         _buildAppBar(context),
         SliverPadding(
           padding: const EdgeInsets.all(20),
-          sliver: SliverToBoxAdapter(child: _buildSearchBar()),
+          sliver: SliverToBoxAdapter(child: _buildSearchBar(context)),
         ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -101,7 +108,7 @@ class _RequestsView extends StatelessWidget {
         _buildRequestsList(context),
         SliverPadding(
           padding: const EdgeInsets.all(20),
-          sliver: SliverToBoxAdapter(child: _buildRadarSection()),
+          sliver: SliverToBoxAdapter(child: _buildRadarSection(context)),
         ),
       ],
     );
@@ -109,7 +116,7 @@ class _RequestsView extends StatelessWidget {
 
   Widget _buildAppBar(BuildContext context) {
     return SliverAppBar(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floating: true,
       elevation: 0,
       centerTitle: true,
@@ -118,7 +125,7 @@ class _RequestsView extends StatelessWidget {
         style: GoogleFonts.notoKufiArabic(
           fontWeight: FontWeight.bold,
           fontSize: 20,
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
       leading: IconButton(
@@ -150,19 +157,19 @@ class _RequestsView extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         decoration: InputDecoration(
           hintText: 'البحث باسم الطالب أو الرقم التعريفي...',
           hintStyle: GoogleFonts.notoKufiArabic(
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 13,
           ),
           border: InputBorder.none,
@@ -179,7 +186,7 @@ class _RequestsView extends StatelessWidget {
         Text(
           title,
           style: GoogleFonts.notoKufiArabic(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -279,14 +286,14 @@ class _RequestsView extends StatelessWidget {
     );
   }
 
-  Widget _buildRadarSection() {
+  Widget _buildRadarSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'موقع أولياء الأمور (المنطقة الجغرافية)',
           style: GoogleFonts.notoKufiArabic(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
@@ -296,9 +303,11 @@ class _RequestsView extends StatelessWidget {
           height: 180,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withOpacity(0.05),
+            ),
           ),
           child: Stack(
             children: [
@@ -316,7 +325,7 @@ class _RequestsView extends StatelessWidget {
                     Text(
                       'البوابة الرئيسية',
                       style: GoogleFonts.notoKufiArabic(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 12,
                       ),
                     ),
@@ -385,9 +394,11 @@ class _DismissalCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.05),
+        ),
       ),
       child: Column(
         children: [
@@ -419,7 +430,7 @@ class _DismissalCard extends StatelessWidget {
                     Text(
                       request.studentName,
                       style: GoogleFonts.notoKufiArabic(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -455,7 +466,11 @@ class _DismissalCard extends StatelessWidget {
                         color: statusColor,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF1E293B),
+                          color:
+                              Theme.of(context).cardTheme.color ??
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white),
                           width: 2,
                         ),
                       ),
@@ -469,7 +484,7 @@ class _DismissalCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withOpacity(0.5),
+              color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -483,7 +498,7 @@ class _DismissalCard extends StatelessWidget {
                 Text(
                   'المصرح له: ${request.parentName}',
                   style: GoogleFonts.notoKufiArabic(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 12,
                   ),
                 ),
@@ -568,7 +583,7 @@ class _HistoryView extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           floating: true,
           elevation: 0,
           centerTitle: true,
@@ -577,7 +592,7 @@ class _HistoryView extends StatelessWidget {
             style: GoogleFonts.notoKufiArabic(
               fontWeight: FontWeight.bold,
               fontSize: 20,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -662,7 +677,7 @@ class _ScannerView extends StatelessWidget {
           Text(
             'ماسح الرموز السريع',
             style: GoogleFonts.notoKufiArabic(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -672,35 +687,73 @@ class _ScannerView extends StatelessWidget {
             'قم بمسح الكود الخاص بالطالب للتحقق الفوري وتسجيل الحضور أو الانصراف.',
             textAlign: TextAlign.center,
             style: GoogleFonts.notoKufiArabic(
-              color: const Color(0xFF94A3B8),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
           const SizedBox(height: 48),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // Navigate to existing full-screen scanner
-                context.push('/scan');
-              },
-              icon: const Icon(Icons.center_focus_strong_rounded),
-              label: Text(
-                'تشغيل الكاميرا',
-                style: GoogleFonts.notoKufiArabic(fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B82F6),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+            child: Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Navigate to existing full-screen scanner
+                      context.push('/scan');
+                    },
+                    icon: const Icon(Icons.center_focus_strong_rounded),
+                    label: Text(
+                      'تشغيل الكاميرا',
+                      style: GoogleFonts.notoKufiArabic(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showManualSearchDialog(context),
+                    icon: const Icon(Icons.search_rounded),
+                    label: Text(
+                      'بحث يدوي عن طفل',
+                      style: GoogleFonts.notoKufiArabic(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF3B82F6),
+                      side: const BorderSide(color: Color(0xFF3B82F6)),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showManualSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const _ManualSearchDialog(),
     );
   }
 }
@@ -713,7 +766,7 @@ class _SettingsView extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           floating: true,
           elevation: 0,
           centerTitle: true,
@@ -722,7 +775,7 @@ class _SettingsView extends StatelessWidget {
             style: GoogleFonts.notoKufiArabic(
               fontWeight: FontWeight.bold,
               fontSize: 20,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -918,9 +971,11 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.05),
+        ),
       ),
       child: ListTile(
         onTap: onTap,
@@ -934,13 +989,16 @@ class _SettingsTile extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: GoogleFonts.notoKufiArabic(color: Colors.white, fontSize: 14),
+          style: GoogleFonts.notoKufiArabic(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 14,
+          ),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle!,
                 style: GoogleFonts.notoKufiArabic(
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 12,
                 ),
               )
@@ -948,9 +1006,9 @@ class _SettingsTile extends StatelessWidget {
         trailing:
             trailing ??
             (onTap != null
-                ? const Icon(
+                ? Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: Color(0xFF64748B),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     size: 14,
                   )
                 : null),
@@ -999,4 +1057,218 @@ class _RadarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+class _ManualSearchDialog extends StatefulWidget {
+  const _ManualSearchDialog();
+
+  @override
+  State<_ManualSearchDialog> createState() => _ManualSearchDialogState();
+}
+
+class _ManualSearchDialogState extends State<_ManualSearchDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  List<StudentModel> _searchResults = [];
+  bool _isLoading = false;
+
+  Future<void> _performSearch(String query) async {
+    if (query.length < 2) {
+      setState(() => _searchResults = []);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final results = await context.read<AttendanceRepository>().searchStudents(
+        query,
+      );
+      setState(() => _searchResults = results);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error searching: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _recordAttendance(StudentModel student, AttendanceStatus status) async {
+    final record = AttendanceRecord(
+      id: '',
+      studentId: student.id,
+      timestamp: DateTime.now(),
+      status: status,
+      busId: null, // Gate check-in is not bus-specific
+      location: 'Main Gate (Manual)',
+    );
+
+    try {
+      await context.read<AttendanceRepository>().recordAttendance(record);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              'تم تسجيل ${status == AttendanceStatus.checkIn ? 'الحضور' : 'الانصراف'} لـ ${student.name}',
+              style: GoogleFonts.notoKufiArabic(),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Dialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'بحث يدوي عن طالب',
+                style: GoogleFonts.notoKufiArabic(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _searchController,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                onChanged: _performSearch,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'ادخل اسم الطالب...',
+                  hintStyle: GoogleFonts.notoKufiArabic(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: Color(0xFF3B82F6),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 300),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _searchResults.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Text(
+                          _searchController.text.length < 2
+                              ? 'اكتب حرفين على الأقل للبحث'
+                              : 'لا توجد نتائج',
+                          style: GoogleFonts.notoKufiArabic(
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: _searchResults.length,
+                        separatorBuilder: (context, index) =>
+                            const Divider(color: Colors.white12),
+                        itemBuilder: (context, index) {
+                          final student = _searchResults[index];
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              student.name,
+                              style: GoogleFonts.notoKufiArabic(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              student.grade,
+                              style: GoogleFonts.notoKufiArabic(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: () => _recordAttendance(
+                                    student,
+                                    AttendanceStatus.checkIn,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.login_rounded,
+                                    color: Colors.green,
+                                  ),
+                                  tooltip: 'حضور',
+                                ),
+                                IconButton(
+                                  onPressed: () => _recordAttendance(
+                                    student,
+                                    AttendanceStatus.checkOut,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.logout_rounded,
+                                    color: Colors.blue,
+                                  ),
+                                  tooltip: 'انصراف',
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'إغلاق',
+                  style: GoogleFonts.notoKufiArabic(
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

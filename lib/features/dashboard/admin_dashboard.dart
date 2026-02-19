@@ -115,7 +115,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   subtitle: 'View activity',
                   icon: Icons.analytics_rounded,
                   color: Colors.blue,
-                  onTap: () {},
+                  onTap: () => context.push('/admin/stats'),
                 ),
               ),
               const SizedBox(width: 16),
@@ -265,7 +265,9 @@ class _UserList extends StatelessWidget {
             child: Center(
               child: Text(
                 'No users found',
-                style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+                style: GoogleFonts.inter(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           );

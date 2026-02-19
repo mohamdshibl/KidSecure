@@ -107,6 +107,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
   void _showAttendanceDialog(BuildContext context, dynamic student) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -120,12 +121,15 @@ class _QrScannerPageState extends State<QrScannerPage> {
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Grade: ${student.grade}',
-              style: GoogleFonts.inter(color: Colors.grey),
+              style: GoogleFonts.inter(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 32),
             Row(
@@ -141,6 +145,9 @@ class _QrScannerPageState extends State<QrScannerPage> {
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text('Check In'),
                   ),
@@ -154,9 +161,12 @@ class _QrScannerPageState extends State<QrScannerPage> {
                       AttendanceStatus.checkOut,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text('Check Out'),
                   ),

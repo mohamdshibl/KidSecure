@@ -45,14 +45,14 @@ class SignUpView extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: Color(0xFF1E293B),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             onPressed: () => context.pop(),
           ),
@@ -69,7 +69,7 @@ class SignUpView extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -77,7 +77,7 @@ class SignUpView extends StatelessWidget {
                   'Join the KidSecure community today.',
                   style: GoogleFonts.inter(
                     fontSize: 16,
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -96,7 +96,7 @@ class SignUpView extends StatelessWidget {
                       "Already have an account? ",
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     GestureDetector(
@@ -106,7 +106,7 @@ class SignUpView extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade600,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                     ),
@@ -129,8 +129,12 @@ class _NameInput extends StatelessWidget {
       label: 'Full Name',
       child: TextField(
         onChanged: (name) => context.read<SignUpCubit>().nameChanged(name),
-        style: GoogleFonts.inter(fontSize: 15),
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
         decoration: _inputDecoration(
+          context,
           'e.g. John Doe',
           Icons.person_outline_rounded,
         ),
@@ -147,8 +151,12 @@ class _EmailInput extends StatelessWidget {
       child: TextField(
         onChanged: (email) => context.read<SignUpCubit>().emailChanged(email),
         keyboardType: TextInputType.emailAddress,
-        style: GoogleFonts.inter(fontSize: 15),
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
         decoration: _inputDecoration(
+          context,
           'e.g. john@example.com',
           Icons.email_outlined,
         ),
@@ -165,8 +173,12 @@ class _PasswordInput extends StatelessWidget {
       child: TextField(
         onChanged: (pw) => context.read<SignUpCubit>().passwordChanged(pw),
         obscureText: true,
-        style: GoogleFonts.inter(fontSize: 15),
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
         decoration: _inputDecoration(
+          context,
           'Create a strong password',
           Icons.lock_outline_rounded,
         ),
@@ -188,7 +200,7 @@ class _SignUpButton extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => context.read<SignUpCubit>().signUp(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -226,7 +238,7 @@ class _InputWrapper extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -236,24 +248,39 @@ class _InputWrapper extends StatelessWidget {
   }
 }
 
-InputDecoration _inputDecoration(String hint, IconData icon) {
+InputDecoration _inputDecoration(
+  BuildContext context,
+  String hint,
+  IconData icon,
+) {
   return InputDecoration(
     hintText: hint,
-    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 15),
-    prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
+    hintStyle: GoogleFonts.inter(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      fontSize: 15,
+    ),
+    prefixIcon: Icon(
+      icon,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      size: 20,
+    ),
     filled: true,
-    fillColor: Colors.white,
+    fillColor: Theme.of(context).colorScheme.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+      borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
     ),
     contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
   );

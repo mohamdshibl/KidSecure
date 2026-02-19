@@ -95,4 +95,19 @@ class FirebaseAttendanceRepository implements AttendanceRepository {
               .toList();
         });
   }
+
+  @override
+  Future<List<StudentModel>> searchStudents(String query) async {
+    if (query.isEmpty) return [];
+
+    final snapshots = await _firestore
+        .collection('students')
+        .where('name', isGreaterThanOrEqualTo: query)
+        .where('name', isLessThanOrEqualTo: '$query\uf8ff')
+        .get();
+
+    return snapshots.docs
+        .map((doc) => StudentModel.fromMap(doc.data(), doc.id))
+        .toList();
+  }
 }

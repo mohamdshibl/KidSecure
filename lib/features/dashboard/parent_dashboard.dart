@@ -50,7 +50,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         final busId = students.isNotEmpty ? students.first.busId : null;
 
         return Scaffold(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             child: IndexedStack(
               index: _selectedIndex,
@@ -77,16 +77,20 @@ class _ParentDashboardState extends State<ParentDashboard> {
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+        color: Theme.of(context).cardTheme.color,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.05),
+          ),
+        ),
       ),
       child: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         backgroundColor: Colors.transparent,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3B82F6),
-        unselectedItemColor: const Color(0xFF64748B),
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
         selectedLabelStyle: GoogleFonts.notoKufiArabic(
           fontSize: 12,
           fontWeight: FontWeight.bold,
@@ -117,7 +121,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           color: const Color(0xFFEF4444),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: const Color(0xFF1E293B),
+                            color:
+                                Theme.of(context).cardTheme.color ??
+                                const Color(0xFF1E293B),
                             width: 1.5,
                           ),
                         ),
@@ -177,7 +183,7 @@ class _HomeView extends StatelessWidget {
             style: GoogleFonts.notoKufiArabic(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -201,7 +207,7 @@ class _HomeView extends StatelessWidget {
               style: GoogleFonts.notoKufiArabic(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 4),
@@ -209,7 +215,7 @@ class _HomeView extends StatelessWidget {
               "تابع سلامة أبنائك بانتظام.",
               style: GoogleFonts.notoKufiArabic(
                 fontSize: 14,
-                color: const Color(0xFF64748B),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -333,14 +339,20 @@ class _ProfileTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap,
-      leading: Icon(icon, color: const Color(0xFF64748B)),
+      leading: Icon(
+        icon,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
       title: Text(
         title,
-        style: GoogleFonts.notoKufiArabic(color: Colors.white, fontSize: 16),
+        style: GoogleFonts.notoKufiArabic(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 16,
+        ),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.arrow_forward_ios_rounded,
-        color: Color(0xFF64748B),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
         size: 16,
       ),
     );
@@ -358,9 +370,11 @@ class _StudentCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.05),
+        ),
       ),
       child: Column(
         children: [
@@ -370,11 +384,13 @@ class _StudentCard extends StatelessWidget {
                 onTap: () => context.push('/student-details', extra: student),
                 child: CircleAvatar(
                   radius: 30,
-                  backgroundColor: const Color(0xFF3B82F6).withOpacity(0.1),
-                  child: const Icon(
+                  backgroundColor: Theme.of(
+                    context,
+                  ).primaryColor.withOpacity(0.1),
+                  child: Icon(
                     Icons.person,
                     size: 30,
-                    color: Color(0xFF3B82F6),
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
               ),
@@ -388,14 +404,14 @@ class _StudentCard extends StatelessWidget {
                       style: GoogleFonts.notoKufiArabic(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       'الصف: ${student.grade}',
                       style: GoogleFonts.notoKufiArabic(
                         fontSize: 14,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -465,7 +481,7 @@ class _DismissalActions extends StatelessWidget {
                 style: GoogleFonts.notoKufiArabic(fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B82F6),
+                backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -515,14 +531,14 @@ class _EmptyDashboard extends StatelessWidget {
           Icon(
             Icons.child_care_rounded,
             size: 64,
-            color: const Color(0xFF3B82F6).withOpacity(0.5),
+            color: Theme.of(context).primaryColor.withOpacity(0.5),
           ),
           const SizedBox(height: 16),
           Text(
             'لم يتم تسجيل أبناء بعد.',
             style: GoogleFonts.notoKufiArabic(
               fontSize: 16,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           TextButton(
@@ -545,7 +561,9 @@ class _NoBusAssigned extends StatelessWidget {
           Icon(
             Icons.directions_bus_rounded,
             size: 64,
-            color: const Color(0xFF64748B).withOpacity(0.5),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withOpacity(0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -553,7 +571,7 @@ class _NoBusAssigned extends StatelessWidget {
             style: GoogleFonts.notoKufiArabic(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -561,7 +579,7 @@ class _NoBusAssigned extends StatelessWidget {
             'لم يتم تعيين حافلة لأبنائك بعد.',
             style: GoogleFonts.notoKufiArabic(
               fontSize: 14,
-              color: const Color(0xFF64748B).withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -584,7 +602,7 @@ class _QuickActions extends StatelessWidget {
           style: GoogleFonts.notoKufiArabic(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 16),

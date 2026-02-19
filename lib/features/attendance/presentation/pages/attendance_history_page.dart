@@ -15,7 +15,7 @@ class AttendanceHistoryPage extends StatelessWidget {
     final user = context.read<AuthBloc>().state.user!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'سجل الحضور',
@@ -38,7 +38,7 @@ class AttendanceHistoryPage extends StatelessWidget {
               child: Text(
                 'لا يوجد أبناء مسجلين.',
                 style: GoogleFonts.notoKufiArabic(
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             );
@@ -73,10 +73,12 @@ class _StudentAttendanceSection extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: const Color(0xFF3B82F6).withOpacity(0.1),
-                child: const Icon(
+                backgroundColor: Theme.of(
+                  context,
+                ).primaryColor.withOpacity(0.1),
+                child: Icon(
                   Icons.person,
-                  color: Color(0xFF3B82F6),
+                  color: Theme.of(context).primaryColor,
                   size: 20,
                 ),
               ),
@@ -86,7 +88,7 @@ class _StudentAttendanceSection extends StatelessWidget {
                 style: GoogleFonts.notoKufiArabic(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -117,14 +119,14 @@ class _StudentAttendanceSection extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).cardTheme.color,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Center(
                   child: Text(
                     'لا توجد سجلات حضور.',
                     style: GoogleFonts.notoKufiArabic(
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -138,9 +140,11 @@ class _StudentAttendanceSection extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).cardTheme.color,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor.withOpacity(0.05),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -168,14 +172,16 @@ class _StudentAttendanceSection extends StatelessWidget {
                               isCheckIn ? 'صعود' : 'نزول',
                               style: GoogleFonts.notoKufiArabic(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             Text(
                               record.location ?? '',
                               style: GoogleFonts.notoKufiArabic(
                                 fontSize: 12,
-                                color: const Color(0xFF64748B),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -189,14 +195,16 @@ class _StudentAttendanceSection extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           Text(
                             DateFormat('yyyy/MM/dd').format(record.timestamp),
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: const Color(0xFF64748B),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],

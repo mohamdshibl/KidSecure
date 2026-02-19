@@ -42,7 +42,7 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: CustomScrollView(
             slivers: [
@@ -68,14 +68,14 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
         style: GoogleFonts.notoKufiArabic(
           fontWeight: FontWeight.bold,
           fontSize: 18,
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.done_all_rounded,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
             size: 20,
           ),
           onPressed: () {
@@ -96,23 +96,27 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor.withOpacity(0.05),
+                ),
               ),
               child: TextField(
                 controller: _searchController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 decoration: InputDecoration(
                   hintText: 'البحث في التنبيهات...',
                   hintStyle: GoogleFonts.notoKufiArabic(
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
                   ),
                   border: InputBorder.none,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.search_rounded,
-                    color: Color(0xFF64748B),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 onChanged: (_) => setState(() {}),
@@ -157,13 +161,13 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF3B82F6)
-                    : const Color(0xFF1E293B),
+                    ? Theme.of(context).primaryColor
+                    : Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFF3B82F6)
-                      : Colors.white.withOpacity(0.1),
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).dividerColor.withOpacity(0.1),
                 ),
               ),
               child: Row(
@@ -173,7 +177,7 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
                       filter['icon'] as IconData,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF64748B),
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                       size: 16,
                     ),
                     const SizedBox(width: 8),
@@ -183,7 +187,7 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
                     style: GoogleFonts.notoKufiArabic(
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF94A3B8),
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                       fontWeight: isSelected
                           ? FontWeight.bold
@@ -239,13 +243,15 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
                   Icon(
                     Icons.notifications_none_rounded,
                     size: 64,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.1),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'لا توجد تنبيهات حالياً',
                     style: GoogleFonts.notoKufiArabic(
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -309,12 +315,12 @@ class _NotificationCard extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E293B),
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isUnread
-                ? const Color(0xFF3B82F6).withOpacity(0.3)
-                : Colors.white.withOpacity(0.05),
+                ? Theme.of(context).primaryColor.withOpacity(0.3)
+                : Theme.of(context).dividerColor.withOpacity(0.05),
             width: isUnread ? 1.5 : 1,
           ),
           boxShadow: isUnread
@@ -341,7 +347,7 @@ class _NotificationCard extends StatelessWidget {
                       Text(
                         notification.title,
                         style: GoogleFonts.notoKufiArabic(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -349,7 +355,7 @@ class _NotificationCard extends StatelessWidget {
                       Text(
                         _formatTimestamp(notification.timestamp),
                         style: GoogleFonts.notoKufiArabic(
-                          color: const Color(0xFF64748B),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 10,
                         ),
                       ),
@@ -359,7 +365,7 @@ class _NotificationCard extends StatelessWidget {
                   Text(
                     notification.body,
                     style: GoogleFonts.notoKufiArabic(
-                      color: const Color(0xFF94A3B8),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                       height: 1.6,
                     ),

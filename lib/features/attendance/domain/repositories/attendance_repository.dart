@@ -10,4 +10,5 @@ abstract class AttendanceRepository {
   Future<void> deleteStudent(String studentId);
   Stream<List<AttendanceRecord>> getDailyAttendance(DateTime date);
   Stream<List<StudentModel>> getStudentsByBus(String busId);
+  Future<List<StudentModel>> searchStudents(String query);
 }
