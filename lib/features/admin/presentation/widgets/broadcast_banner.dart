@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../domain/broadcast_repository.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/domain/user_model.dart';
+import '../../../../features/notifications/domain/models/notification_model.dart';
+import '../../../../core/theme/theme_cubit.dart';
 
 class BroadcastBanner extends StatelessWidget {
   const BroadcastBanner({super.key});
@@ -21,7 +24,9 @@ class BroadcastBanner extends StatelessWidget {
         }
 
         // Find the latest message that targets this user's role or 'all'
+        final dismissedIds = context.watch<ThemeCubit>().dismissedBroadcastIds;
         final relevantMessages = snapshot.data!.where((msg) {
+          if (dismissedIds.contains(msg.id)) return false;
           if (msg.target == BroadcastTarget.all) return true;
           if (user.role == UserRole.parent &&
               msg.target == BroadcastTarget.parents)
@@ -65,66 +70,86 @@ class BroadcastBanner extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             child: Material(
               color: Colors.transparent,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
+              child: InkWell(
+                onTap: () {
+                  final notification = AppNotification(
+                    id: latest.id,
+                    title: latest.title,
+                    body: latest.body,
+                    type: NotificationType.announcement,
+                    timestamp: latest.createdAt,
+                    isRead: true,
+                    parentId: user.id,
+                  );
+                  context.push('/notification-details', extra: notification);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.campaign_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.campaign_rounded,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                latest.title,
-                                style: GoogleFonts.outfit(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  latest.title,
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                timeAgo,
-                                style: GoogleFonts.inter(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 11,
+                                Text(
+                                  timeAgo,
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 11,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            latest.body,
-                            style: GoogleFonts.inter(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 13,
+                              ],
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            Text(
+                              latest.body,
+                              style: GoogleFonts.inter(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.white.withOpacity(0.5),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () => context
+                            .read<ThemeCubit>()
+                            .dismissBroadcast(latest.id),
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                        splashRadius: 24,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

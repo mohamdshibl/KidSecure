@@ -18,63 +18,113 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
+  int _selectedIndex = 0;
   UserRole? _filterRole;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Admin Console',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          BlocBuilder<ThemeCubit, ThemeMode>(
-            builder: (context, mode) {
-              return IconButton(
-                onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-                icon: Icon(
-                  mode == ThemeMode.dark
-                      ? Icons.light_mode_rounded
-                      : Icons.dark_mode_rounded,
-                ),
-              );
-            },
-          ),
-          IconButton(
-            onPressed: () =>
-                context.read<AuthBloc>().add(AuthLogoutRequested()),
-            icon: const Icon(Icons.logout_rounded),
-          ),
-        ],
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _buildQuickActions(context)),
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: BroadcastBanner(),
+      body: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            _HomeView(
+              filterRole: _filterRole,
+              onFilterRoleChanged: (role) => setState(() => _filterRole = role),
             ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
-          SliverToBoxAdapter(child: _buildRoleFilter(context)),
-          _UserList(filterRole: _filterRole),
-        ],
+            const _ProfileView(),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/admin/add-staff'),
-        backgroundColor: Colors.blue.shade600,
-        icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-        label: Text(
-          'Add Staff',
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+      bottomNavigationBar: _buildBottomNav(),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push('/admin/add-staff'),
+              backgroundColor: Theme.of(context).primaryColor,
+              icon: const Icon(Icons.person_add_rounded, color: Colors.white),
+              label: Text(
+                'Add Staff',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
           ),
         ),
       ),
+      child: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        backgroundColor: Colors.transparent,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
+        selectedLabelStyle: GoogleFonts.outfit(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+        unselectedLabelStyle: GoogleFonts.outfit(fontSize: 12),
+        elevation: 0,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_rounded),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeView extends StatelessWidget {
+  final UserRole? filterRole;
+  final Function(UserRole?) onFilterRoleChanged;
+
+  const _HomeView({
+    required this.filterRole,
+    required this.onFilterRoleChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          title: Text(
+            'Admin Console',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+        ),
+        SliverToBoxAdapter(child: _buildQuickActions(context)),
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: BroadcastBanner(),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        SliverToBoxAdapter(child: _buildRoleFilter(context)),
+        _UserList(filterRole: filterRole),
+      ],
     );
   }
 
@@ -138,16 +188,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
           children: [
             _FilterChip(
               label: 'All',
-              isSelected: _filterRole == null,
-              onSelected: () => setState(() => _filterRole = null),
+              isSelected: filterRole == null,
+              onSelected: () => onFilterRoleChanged(null),
             ),
             ...UserRole.values.map((role) {
               return Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: _FilterChip(
                   label: role.toString().split('.').last,
-                  isSelected: _filterRole == role,
-                  onSelected: () => setState(() => _filterRole = role),
+                  isSelected: filterRole == role,
+                  onSelected: () => onFilterRoleChanged(role),
                 ),
               );
             }),
@@ -378,5 +428,183 @@ class _UserCard extends StatelessWidget {
       case UserRole.driver:
         return Icons.drive_eta_rounded;
     }
+  }
+}
+
+class _ProfileView extends StatelessWidget {
+  const _ProfileView();
+
+  @override
+  Widget build(BuildContext context) {
+    final user = context.read<AuthBloc>().state.user;
+
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          floating: true,
+          elevation: 0,
+          centerTitle: true,
+          title: Text(
+            'Profile',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.all(24),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              children: [
+                _buildProfileCard(context, user?.name ?? 'Admin'),
+                const SizedBox(height: 32),
+                _buildSettingsSection(context),
+                const SizedBox(height: 48),
+                _buildLogoutButton(context),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileCard(BuildContext context, String name) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor,
+            Theme.of(context).primaryColor.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 35,
+            backgroundColor: Colors.white.withOpacity(0.2),
+            child: const Icon(
+              Icons.person_rounded,
+              size: 40,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'School Administrator',
+                  style: GoogleFonts.inter(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Settings',
+          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, mode) {
+            return _SettingsTile(
+              icon: mode == ThemeMode.dark
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+              label: 'Dark Mode',
+              trailing: Switch(
+                value: mode == ThemeMode.dark,
+                onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLogoutButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
+        icon: const Icon(Icons.logout_rounded),
+        label: const Text('Logout'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFEF4444).withOpacity(0.1),
+          foregroundColor: const Color(0xFFEF4444),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Widget trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.label,
+    required this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.05),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).primaryColor, size: 20),
+          const SizedBox(width: 16),
+          Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+          const Spacer(),
+          trailing,
+        ],
+      ),
+    );
   }
 }

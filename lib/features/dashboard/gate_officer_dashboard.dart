@@ -34,7 +34,7 @@ class _GateOfficerDashboardState extends State<GateOfficerDashboard> {
               _RequestsView(),
               _HistoryView(),
               _ScannerView(),
-              _SettingsView(),
+              _ProfileView(),
             ],
           ),
         ),
@@ -80,8 +80,8 @@ class _GateOfficerDashboardState extends State<GateOfficerDashboard> {
             label: 'ماسح',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_rounded),
-            label: 'الإعدادات',
+            icon: Icon(Icons.person_rounded),
+            label: 'الملف',
           ),
         ],
       ),
@@ -758,7 +758,7 @@ class _ScannerView extends StatelessWidget {
   }
 }
 
-class _SettingsView extends StatelessWidget {
+class _ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.read<AuthBloc>().state.user;
@@ -771,7 +771,7 @@ class _SettingsView extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
           title: Text(
-            'الإعدادات',
+            'الملف الشخصي',
             style: GoogleFonts.notoKufiArabic(
               fontWeight: FontWeight.bold,
               fontSize: 20,

@@ -277,12 +277,12 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
                 padding: const EdgeInsets.only(left: 20),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade900.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.error.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(24),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.delete_outline_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.error,
                 ),
               ),
               child: _NotificationCard(notification: n),

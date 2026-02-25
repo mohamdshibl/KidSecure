@@ -16,18 +16,21 @@ class NotificationDetailsPage extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: Icon(
+              Icons.arrow_back_rounded,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             onPressed: () => context.pop(),
           ),
           title: Text(
             'تفاصيل التنبيه',
             style: GoogleFonts.notoKufiArabic(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -44,14 +47,16 @@ class NotificationDetailsPage extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).cardTheme.color,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor.withOpacity(0.1),
+                  ),
                 ),
                 child: Text(
                   notification.body,
                   style: GoogleFonts.notoKufiArabic(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 16,
                     height: 1.8,
                   ),
@@ -89,7 +94,7 @@ class NotificationDetailsPage extends StatelessWidget {
               child: Text(
                 notification.title,
                 style: GoogleFonts.notoKufiArabic(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -112,7 +117,7 @@ class NotificationDetailsPage extends StatelessWidget {
                 'en',
               ).format(notification.timestamp),
               style: GoogleFonts.inter(
-                color: const Color(0xFF64748B),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
             ),

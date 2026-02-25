@@ -220,9 +220,18 @@ class _HomeView extends StatelessWidget {
             ),
           ],
         ),
-        IconButton(
-          onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-          icon: const Icon(Icons.dark_mode_rounded, color: Colors.blue),
+        BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, mode) {
+            return IconButton(
+              onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+              icon: Icon(
+                mode == ThemeMode.dark
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
+                color: mode == ThemeMode.dark ? Colors.orange : Colors.blue,
+              ),
+            );
+          },
         ),
       ],
     );
@@ -293,6 +302,19 @@ class _ProfileView extends StatelessWidget {
             onTap: () {},
           ),
           _ProfileTile(
+            icon: Icons.dark_mode_rounded,
+            title: 'المظهر الداكن',
+            trailing: BlocBuilder<ThemeCubit, ThemeMode>(
+              builder: (context, mode) {
+                return Switch(
+                  value: mode == ThemeMode.dark,
+                  onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
+                  activeColor: Theme.of(context).primaryColor,
+                );
+              },
+            ),
+          ),
+          _ProfileTile(
             icon: Icons.help_outline_rounded,
             title: 'مركز المساعدة',
             onTap: () {},
@@ -327,12 +349,14 @@ class _ProfileView extends StatelessWidget {
 class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String title;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final Widget? trailing;
 
   const _ProfileTile({
     required this.icon,
     required this.title,
-    required this.onTap,
+    this.onTap,
+    this.trailing,
   });
 
   @override
@@ -350,11 +374,13 @@ class _ProfileTile extends StatelessWidget {
           fontSize: 16,
         ),
       ),
-      trailing: Icon(
-        Icons.arrow_forward_ios_rounded,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-        size: 16,
-      ),
+      trailing:
+          trailing ??
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 16,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
     );
   }
 }
