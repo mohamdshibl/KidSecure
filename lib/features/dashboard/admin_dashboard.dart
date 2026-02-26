@@ -140,7 +140,7 @@ class _HomeView extends StatelessWidget {
                   title: 'Emergency',
                   subtitle: 'Critical alerts',
                   icon: Icons.emergency_share_rounded,
-                  color: const Color(0xFFEF4444),
+                  color: Theme.of(context).colorScheme.error,
                   onTap: () => context.push('/admin/emergency-broadcast'),
                 ),
               ),
@@ -150,7 +150,7 @@ class _HomeView extends StatelessWidget {
                   title: 'Broadcast',
                   subtitle: 'General updates',
                   icon: Icons.campaign_rounded,
-                  color: Colors.orange,
+                  color: Colors.amber,
                   onTap: () => context.push('/admin/broadcast'),
                 ),
               ),
@@ -164,12 +164,20 @@ class _HomeView extends StatelessWidget {
                   title: 'Stats',
                   subtitle: 'View activity',
                   icon: Icons.analytics_rounded,
-                  color: Colors.blue,
+                  color: Theme.of(context).primaryColor,
                   onTap: () => context.push('/admin/stats'),
                 ),
               ),
               const SizedBox(width: 16),
-              const Spacer(),
+              Expanded(
+                child: _QuickActionCard(
+                  title: 'History',
+                  subtitle: 'Sent broadcasts',
+                  icon: Icons.history_rounded,
+                  color: Colors.indigo,
+                  onTap: () => context.push('/admin/broadcast-history'),
+                ),
+              ),
             ],
           ),
         ],
@@ -397,7 +405,7 @@ class _UserCard extends StatelessWidget {
             onChanged: (val) {
               context.read<AuthRepository>().toggleUserStatus(user.id, val);
             },
-            activeColor: Colors.green,
+            activeColor: Theme.of(context).colorScheme.primary,
           ),
         ],
       ),
@@ -407,11 +415,11 @@ class _UserCard extends StatelessWidget {
   Color _getRoleColor(UserRole role) {
     switch (role) {
       case UserRole.admin:
-        return Colors.purple;
+        return Colors.indigo;
       case UserRole.parent:
         return Colors.blue;
       case UserRole.gateOfficer:
-        return Colors.orange;
+        return Colors.amber;
       case UserRole.driver:
         return Colors.teal;
     }
@@ -560,8 +568,8 @@ class _ProfileView extends StatelessWidget {
         icon: const Icon(Icons.logout_rounded),
         label: const Text('Logout'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEF4444).withOpacity(0.1),
-          foregroundColor: const Color(0xFFEF4444),
+          backgroundColor: Theme.of(context).colorScheme.error.withOpacity(0.1),
+          foregroundColor: Theme.of(context).colorScheme.error,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

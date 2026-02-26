@@ -53,6 +53,8 @@ dependencies:
   qr_flutter: any
   mobile_scanner: any
   go_router: any
+  flutter_local_notifications: ^17.2.4
+  image_picker: any
 
 dev_dependencies:
   flutter_test:

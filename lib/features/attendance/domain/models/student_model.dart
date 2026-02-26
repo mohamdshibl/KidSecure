@@ -56,4 +56,22 @@ class StudentModel extends Equatable {
     qrCode,
     busId,
   ];
+
+  StudentModel copyWith({
+    String? name,
+    String? grade,
+    String? profileImageUrl,
+    String? busId,
+  }) {
+    return StudentModel(
+      id: id,
+      name: name ?? this.name,
+      parentId: parentId,
+      schoolId: schoolId,
+      grade: grade ?? this.grade,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      qrCode: qrCode,
+      busId: busId ?? this.busId,
+    );
+  }
 }

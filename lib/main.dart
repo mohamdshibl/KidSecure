@@ -12,6 +12,7 @@ import 'features/dashboard/dashboard_page.dart';
 import 'features/auth/presentation/pages/add_staff_page.dart';
 import 'features/auth/presentation/pages/signup_page.dart';
 import 'features/auth/presentation/pages/access_denied_page.dart';
+import 'core/services/storage_service.dart';
 import 'features/auth/domain/auth_repository.dart';
 import 'features/attendance/domain/repositories/attendance_repository.dart';
 import 'features/attendance/data/repositories/firebase_attendance_repository.dart';
@@ -29,6 +30,7 @@ import 'core/services/location_service.dart';
 import 'features/admin/domain/broadcast_repository.dart';
 import 'features/admin/data/firebase_broadcast_repository.dart';
 import 'features/admin/presentation/pages/admin_broadcast_page.dart';
+import 'features/admin/presentation/pages/broadcast_history_page.dart';
 import 'features/admin/presentation/pages/emergency_broadcast_page.dart';
 import 'features/attendance/domain/repositories/dismissal_repository.dart';
 import 'features/attendance/data/repositories/firebase_dismissal_repository.dart';
@@ -40,6 +42,7 @@ import 'features/notifications/domain/models/notification_model.dart';
 import 'features/admin/domain/repositories/stats_repository.dart';
 import 'features/admin/data/repositories/firebase_stats_repository.dart';
 import 'features/admin/presentation/pages/admin_stats_page.dart';
+import 'features/attendance/presentation/pages/edit_student_page.dart';
 import 'features/admin/presentation/bloc/stats_cubit.dart';
 
 void main() async {
@@ -131,6 +134,7 @@ class MyApp extends StatelessWidget {
           value: notificationRepository,
         ),
         RepositoryProvider<StatsRepository>.value(value: statsRepository),
+        RepositoryProvider(create: (context) => StorageService()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -190,6 +194,13 @@ class _AppViewState extends State<AppView> {
           },
         ),
         GoRoute(
+          path: '/admin/edit-student',
+          builder: (context, state) {
+            final student = state.extra as StudentModel;
+            return EditStudentPage(student: student);
+          },
+        ),
+        GoRoute(
           path: '/scan',
           builder: (context, state) => const QrScannerPage(),
         ),
@@ -203,6 +214,10 @@ class _AppViewState extends State<AppView> {
         GoRoute(
           path: '/admin/broadcast',
           builder: (context, state) => const AdminBroadcastPage(),
+        ),
+        GoRoute(
+          path: '/admin/broadcast-history',
+          builder: (context, state) => const BroadcastHistoryPage(),
         ),
         GoRoute(
           path: '/admin/emergency-broadcast',

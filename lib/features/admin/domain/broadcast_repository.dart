@@ -19,6 +19,20 @@ class BroadcastMessage {
     required this.senderId,
   });
 
+  factory BroadcastMessage.fromMap(Map<String, dynamic> map, String id) {
+    return BroadcastMessage(
+      id: id,
+      title: map['title'] ?? '',
+      body: map['body'] ?? '',
+      target: BroadcastTarget.values.firstWhere(
+        (e) => e.toString().split('.').last == map['target'],
+        orElse: () => BroadcastTarget.all,
+      ),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      senderId: map['senderId'] ?? '',
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'title': title,
@@ -33,4 +47,5 @@ class BroadcastMessage {
 abstract class BroadcastRepository {
   Future<void> sendBroadcast(BroadcastMessage message);
   Stream<List<BroadcastMessage>> getBroadcasts();
+  Future<void> deleteBroadcast(String id);
 }

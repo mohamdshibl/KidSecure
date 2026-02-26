@@ -58,8 +58,8 @@ class _GateOfficerDashboardState extends State<GateOfficerDashboard> {
         onTap: (index) => setState(() => _selectedIndex = index),
         backgroundColor: Colors.transparent,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3B82F6),
-        unselectedItemColor: const Color(0xFF64748B),
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
         selectedLabelStyle: GoogleFonts.notoKufiArabic(
           fontSize: 12,
           fontWeight: FontWeight.bold,
@@ -130,7 +130,7 @@ class _RequestsView extends StatelessWidget {
       ),
       leading: IconButton(
         onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
-        icon: const Icon(Icons.logout_rounded, color: Color(0xFF3B82F6)),
+        icon: Icon(Icons.logout_rounded, color: Theme.of(context).primaryColor),
       ),
       actions: [
         Padding(
@@ -173,7 +173,10 @@ class _RequestsView extends StatelessWidget {
             fontSize: 13,
           ),
           border: InputBorder.none,
-          icon: const Icon(Icons.search_rounded, color: Color(0xFF64748B)),
+          icon: Icon(
+            Icons.search_rounded,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -196,7 +199,7 @@ class _RequestsView extends StatelessWidget {
           child: Text(
             'عرض الكل',
             style: GoogleFonts.notoKufiArabic(
-              color: const Color(0xFF3B82F6),
+              color: Theme.of(context).primaryColor,
               fontSize: 12,
             ),
           ),
@@ -268,7 +271,7 @@ class _RequestsView extends StatelessWidget {
                 child: Text(
                   'لا توجد طلبات نشطة حالياً',
                   style: GoogleFonts.notoKufiArabic(
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -316,9 +319,9 @@ class _RequestsView extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on_rounded,
-                      color: Color(0xFF3B82F6),
+                      color: Theme.of(context).primaryColor,
                       size: 32,
                     ),
                     const SizedBox(height: 8),
@@ -338,7 +341,7 @@ class _RequestsView extends StatelessWidget {
                 child: Text(
                   'تحديث تلقائي',
                   style: GoogleFonts.notoKufiArabic(
-                    color: const Color(0xFF3B82F6),
+                    color: Theme.of(context).primaryColor,
                     fontSize: 10,
                   ),
                 ),
@@ -438,7 +441,7 @@ class _DismissalCard extends StatelessWidget {
                     Text(
                       request.studentGrade,
                       style: GoogleFonts.notoKufiArabic(
-                        color: const Color(0xFF94A3B8),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
@@ -449,7 +452,7 @@ class _DismissalCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 35,
-                    backgroundColor: const Color(0xFF334155),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                     child: Icon(
                       Icons.person,
                       size: 40,
@@ -489,10 +492,10 @@ class _DismissalCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.person_outline_rounded,
                   size: 16,
-                  color: Color(0xFF3B82F6),
+                  color: Theme.of(context).primaryColor,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -558,7 +561,7 @@ class _DismissalCard extends StatelessWidget {
               const SizedBox(width: 12),
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF334155),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: IconButton(
@@ -602,7 +605,7 @@ class _HistoryView extends StatelessWidget {
             child: Text(
               'أحدث الطلبات المنتهية',
               style: GoogleFonts.notoKufiArabic(
-                color: const Color(0xFF94A3B8),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
             ),
@@ -632,7 +635,7 @@ class _HistoryView extends StatelessWidget {
                     child: Text(
                       'السجل فارغ حالياً',
                       style: GoogleFonts.notoKufiArabic(
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),

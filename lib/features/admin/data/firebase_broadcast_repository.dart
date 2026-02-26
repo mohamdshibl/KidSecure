@@ -16,21 +16,14 @@ class FirebaseBroadcastRepository implements BroadcastRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            final data = doc.data();
-            return BroadcastMessage(
-              id: doc.id,
-              title: data['title'] ?? '',
-              body: data['body'] ?? '',
-              target: BroadcastTarget.values.firstWhere(
-                (e) => e.toString().split('.').last == data['target'],
-                orElse: () => BroadcastTarget.all,
-              ),
-              createdAt:
-                  (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-              senderId: data['senderId'] ?? '',
-            );
-          }).toList();
+          return snapshot.docs
+              .map((doc) => BroadcastMessage.fromMap(doc.data(), doc.id))
+              .toList();
         });
+  }
+
+  @override
+  Future<void> deleteBroadcast(String id) async {
+    await _firestore.collection('broadcasts').doc(id).delete();
   }
 }

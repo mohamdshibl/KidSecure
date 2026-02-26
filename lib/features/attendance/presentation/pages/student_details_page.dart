@@ -5,6 +5,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/models/student_model.dart';
 import '../../domain/repositories/attendance_repository.dart';
+import '../../../auth/domain/user_model.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class StudentDetailsPage extends StatelessWidget {
   final StudentModel student;
@@ -20,6 +22,14 @@ class StudentDetailsPage extends StatelessWidget {
           student.name,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          if (context.read<AuthBloc>().state.user?.role == UserRole.admin)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () =>
+                  context.push('/admin/edit-student', extra: student),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),

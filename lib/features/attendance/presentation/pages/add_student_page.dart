@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/student_management_cubit.dart';
@@ -16,6 +19,7 @@ class AddStudentPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => StudentManagementCubit(
         attendanceRepository: context.read<AttendanceRepository>(),
+        storageService: context.read<StorageService>(),
         parentId: parentId,
       ),
       child: const AddStudentView(),
@@ -62,7 +66,9 @@ class AddStudentView extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              _ImagePicker(),
+              const SizedBox(height: 32),
               _NameInput(),
               const SizedBox(height: 16),
               _GradeInput(),
@@ -73,6 +79,74 @@ class AddStudentView extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ImagePicker extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: BlocBuilder<StudentManagementCubit, StudentManagementState>(
+        builder: (context, state) {
+          return GestureDetector(
+            onTap: () async {
+              final picker = ImagePicker();
+              final image = await picker.pickImage(
+                source: ImageSource.gallery,
+                maxWidth: 512,
+                maxHeight: 512,
+                imageQuality: 75,
+              );
+
+              if (image != null) {
+                if (context.mounted) {
+                  context.read<StudentManagementCubit>().imageFileChanged(
+                    File(image.path),
+                  );
+                }
+              }
+            },
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 60,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).primaryColor.withOpacity(0.1),
+                  backgroundImage: state.imageFile != null
+                      ? FileImage(state.imageFile!)
+                      : null,
+                  child: state.imageFile == null
+                      ? Icon(
+                          Icons.add_a_photo_outlined,
+                          size: 40,
+                          color: Theme.of(context).primaryColor,
+                        )
+                      : null,
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

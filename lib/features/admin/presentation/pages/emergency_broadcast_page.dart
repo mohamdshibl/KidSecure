@@ -427,65 +427,9 @@ class _EmergencyBroadcastPageState extends State<EmergencyBroadcastPage> {
   }
 
   Widget _buildSlideToSend() {
-    return Container(
-      width: double.infinity,
-      height: 64,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Text(
-            'اسحب للإرسال الفوري',
-            style: GoogleFonts.notoKufiArabic(
-              color: const Color(0xFF64748B),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Positioned(
-            right: 4,
-            child: GestureDetector(
-              onHorizontalDragEnd: (details) {
-                if (details.primaryVelocity! < -100) {
-                  // Swiped left (in RTL context, or logic)
-                  _sendEmergencyBroadcast();
-                }
-              },
-              child: _isSending
-                  ? const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFEF4444),
-                      ),
-                    )
-                  : Container(
-                      width: 56,
-                      height: 56,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFFEF4444),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
+    return _EmergencySlider(
+      onConfirm: _sendEmergencyBroadcast,
+      isSending: _isSending,
     );
   }
 
@@ -499,6 +443,150 @@ class _EmergencyBroadcastPageState extends State<EmergencyBroadcastPage> {
           fontSize: 10,
         ),
       ),
+    );
+  }
+}
+
+class _EmergencySlider extends StatefulWidget {
+  final VoidCallback onConfirm;
+  final bool isSending;
+
+  const _EmergencySlider({required this.onConfirm, required this.isSending});
+
+  @override
+  State<_EmergencySlider> createState() => _EmergencySliderState();
+}
+
+class _EmergencySliderState extends State<_EmergencySlider>
+    with SingleTickerProviderStateMixin {
+  double _position = 0;
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _animation = Tween<double>(begin: 0, end: 0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(_EmergencySlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isSending && !widget.isSending) {
+      _animateTo(0);
+    }
+  }
+
+  void _animateTo(double target) {
+    _animation =
+        Tween<double>(begin: _position, end: target).animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+        )..addListener(() {
+          setState(() {
+            _position = _animation.value;
+          });
+        });
+    _controller.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double maxSlide = constraints.maxWidth - 64;
+
+        return Container(
+          width: double.infinity,
+          height: 64,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Opacity(
+                opacity: (1 - (_position / (maxSlide * 0.7))).clamp(0.0, 1.0),
+                child: Text(
+                  'اسحب للإرسال الفوري',
+                  style: GoogleFonts.notoKufiArabic(
+                    color: const Color(0xFF64748B),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 4 + _position,
+                child: GestureDetector(
+                  onHorizontalDragUpdate: (details) {
+                    if (widget.isSending) return;
+                    setState(() {
+                      _position = (_position - details.delta.dx).clamp(
+                        0.0,
+                        maxSlide,
+                      );
+                    });
+                  },
+                  onHorizontalDragEnd: (details) {
+                    if (widget.isSending) return;
+                    if (_position >= maxSlide * 0.9) {
+                      setState(() {
+                        _position = maxSlide;
+                      });
+                      widget.onConfirm();
+                    } else {
+                      _animateTo(0);
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFFEF4444,
+                          ).withOpacity(_position > 0 ? 0.6 : 0.4),
+                          blurRadius: 10 + (_position / maxSlide) * 10,
+                          spreadRadius: 1 + (_position / maxSlide) * 2,
+                        ),
+                      ],
+                    ),
+                    child: widget.isSending
+                        ? const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -125,7 +125,7 @@ class _HomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildBusInfo(busId, isSharingLocation),
+              _buildBusInfo(context, busId, isSharingLocation),
               const SizedBox(height: 24),
               const BroadcastBanner(),
               const SizedBox(height: 16),
@@ -177,22 +177,28 @@ class _HomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildBusInfo(String busId, bool isLive) {
+  Widget _buildBusInfo(BuildContext context, String busId, bool isLive) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isLive
               ? [Colors.green.shade600, Colors.green.shade800]
-              : [Colors.orange.shade600, Colors.orange.shade800],
+              : [
+                  Theme.of(context).primaryColor,
+                  Theme.of(context).primaryColor.withOpacity(0.8),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: (isLive ? Colors.green.shade200 : Colors.orange.shade200)
-                .withOpacity(0.3),
+            color:
+                (isLive
+                        ? Colors.green.shade200
+                        : Theme.of(context).primaryColor.withOpacity(0.2))
+                    .withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -252,8 +258,8 @@ class _StudentManifestItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: Color(0xFFF1F5F9),
+          CircleAvatar(
+            backgroundColor: Theme.of(context).colorScheme.surface,
             child: Icon(Icons.person, size: 20),
           ),
           const SizedBox(width: 16),
@@ -486,7 +492,7 @@ class _ProfileView extends StatelessWidget {
           trailing: Switch(
             value: isSharingLocation,
             onChanged: onSharingLocationChanged,
-            activeColor: Colors.orange,
+            activeColor: Theme.of(context).primaryColor,
           ),
         ),
       ],
@@ -501,8 +507,8 @@ class _ProfileView extends StatelessWidget {
         icon: const Icon(Icons.logout_rounded),
         label: const Text('Logout'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEF4444).withOpacity(0.1),
-          foregroundColor: const Color(0xFFEF4444),
+          backgroundColor: Theme.of(context).colorScheme.error.withOpacity(0.1),
+          foregroundColor: Theme.of(context).colorScheme.error,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

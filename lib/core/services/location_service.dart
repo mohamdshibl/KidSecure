@@ -30,10 +30,16 @@ class LocationService {
       );
     }
 
-    // Set up location settings for high accuracy and minimal distance filter
-    const LocationSettings locationSettings = LocationSettings(
+    // Optimized location settings for school bus tracking
+    final LocationSettings locationSettings = AndroidSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 10, // Update location every 10 meters
+      distanceFilter: 30, // Update every 30 meters
+      intervalDuration: const Duration(seconds: 15), // Min 15s between updates
+      foregroundNotificationConfig: const ForegroundNotificationConfig(
+        notificationText: "KidSecure is sharing bus location for parents",
+        notificationTitle: "Location Sharing Active",
+        enableWakeLock: true,
+      ),
     );
 
     _positionSubscription =

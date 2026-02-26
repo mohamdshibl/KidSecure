@@ -118,7 +118,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       return Container(
                         padding: const EdgeInsets.all(1),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444),
+                          color: Theme.of(context).colorScheme.error,
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
                             color:
@@ -228,7 +228,9 @@ class _HomeView extends StatelessWidget {
                 mode == ThemeMode.dark
                     ? Icons.light_mode_rounded
                     : Icons.dark_mode_rounded,
-                color: mode == ThemeMode.dark ? Colors.orange : Colors.blue,
+                color: mode == ThemeMode.dark
+                    ? Colors.amber
+                    : Theme.of(context).primaryColor,
               ),
             );
           },
@@ -251,8 +253,11 @@ class _ProfileView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).primaryColor,
+                  Theme.of(context).primaryColor.withOpacity(0.8),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

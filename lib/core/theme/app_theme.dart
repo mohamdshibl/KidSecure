@@ -47,12 +47,14 @@ class AppTheme {
       brightness: Brightness.dark,
       primaryColor: primaryBlue,
       scaffoldBackgroundColor: darkBg,
+      dividerColor: const Color(0xFF1E293B),
       colorScheme: const ColorScheme.dark(
         primary: primaryBlue,
         secondary: Color(0xFF34D399),
         surface: darkSurface,
         onSurface: Color(0xFFF8FAFC),
         onSurfaceVariant: Color(0xFF94A3B8),
+        error: Color(0xFFF87171),
       ),
       textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme)
           .copyWith(

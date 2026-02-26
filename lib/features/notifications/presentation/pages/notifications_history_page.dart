@@ -73,16 +73,70 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
       ),
       actions: [
         IconButton(
+          tooltip: 'تحديد الكل كمقروء',
           icon: Icon(
             Icons.done_all_rounded,
             color: Theme.of(context).colorScheme.onSurface,
             size: 20,
           ),
-          onPressed: () {
-            // Mark all as read logic
+          onPressed: () async {
+            final user = context.read<AuthBloc>().state.user!;
+            await context.read<NotificationRepository>().markAllAsRead(user.id);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('تم تحديد الكل كمقروء')),
+              );
+            }
           },
         ),
+        IconButton(
+          tooltip: 'مسح الكل',
+          icon: Icon(
+            Icons.delete_sweep_rounded,
+            color: Theme.of(context).colorScheme.error,
+            size: 20,
+          ),
+          onPressed: () => _confirmClearAll(context),
+        ),
       ],
+    );
+  }
+
+  void _confirmClearAll(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: Text('مسح الكل', style: GoogleFonts.notoKufiArabic()),
+          content: Text(
+            'هل أنت متأكد من مسح جميع التنبيهات؟',
+            style: GoogleFonts.notoKufiArabic(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('إلغاء', style: GoogleFonts.notoKufiArabic()),
+            ),
+            TextButton(
+              onPressed: () async {
+                final user = context.read<AuthBloc>().state.user!;
+                await context.read<NotificationRepository>().deleteAll(user.id);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم مسح جميع التنبيهات')),
+                  );
+                }
+              },
+              child: Text(
+                'مسح',
+                style: GoogleFonts.notoKufiArabic(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

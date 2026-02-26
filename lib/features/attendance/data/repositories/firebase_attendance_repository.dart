@@ -59,6 +59,14 @@ class FirebaseAttendanceRepository implements AttendanceRepository {
   }
 
   @override
+  Future<void> updateStudent(StudentModel student) async {
+    await _firestore
+        .collection('students')
+        .doc(student.id)
+        .update(student.toMap());
+  }
+
+  @override
   Future<void> deleteStudent(String studentId) async {
     await _firestore.collection('students').doc(studentId).delete();
   }

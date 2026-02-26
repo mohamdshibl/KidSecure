@@ -27,8 +27,37 @@ class FirebaseNotificationRepository implements NotificationRepository {
   }
 
   @override
+  Future<void> markAllAsRead(String parentId) async {
+    final snapshot = await _firestore
+        .collection('notifications')
+        .where('parentId', isEqualTo: parentId)
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    final batch = _firestore.batch();
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    await batch.commit();
+  }
+
+  @override
   Future<void> deleteNotification(String notificationId) async {
     await _firestore.collection('notifications').doc(notificationId).delete();
+  }
+
+  @override
+  Future<void> deleteAll(String parentId) async {
+    final snapshot = await _firestore
+        .collection('notifications')
+        .where('parentId', isEqualTo: parentId)
+        .get();
+
+    final batch = _firestore.batch();
+    for (var doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
   }
 
   @override
