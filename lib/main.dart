@@ -44,9 +44,11 @@ import 'features/admin/data/repositories/firebase_stats_repository.dart';
 import 'features/admin/presentation/pages/admin_stats_page.dart';
 import 'features/attendance/presentation/pages/edit_student_page.dart';
 import 'features/admin/presentation/bloc/stats_cubit.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
 
   try {
     await Firebase.initializeApp(

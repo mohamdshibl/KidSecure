@@ -298,6 +298,14 @@ class _QuickAttendanceButtons extends StatelessWidget {
     return Row(
       children: [
         IconButton(
+          onPressed: () => _notifyArrival(context),
+          icon: const Icon(
+            Icons.notifications_active_rounded,
+            color: Colors.orange,
+          ),
+          tooltip: 'Notify Near Arrival',
+        ),
+        IconButton(
           onPressed: () => _record(context, AttendanceStatus.checkIn),
           icon: const Icon(Icons.login_rounded, color: Colors.green),
           tooltip: 'Pick-up',
@@ -309,6 +317,36 @@ class _QuickAttendanceButtons extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _notifyArrival(BuildContext context) {
+    final notification = AppNotification(
+      id: const Uuid().v4(),
+      title: 'تنبيه اقتراب الحافلة',
+      body: 'حافلة ${student.name} تقترب، ستصل خلال دقيقة تقريباً.',
+      timestamp: DateTime.now(),
+      isRead: false,
+      type: NotificationType.bus,
+      parentId: student.parentId,
+      studentId: student.id,
+    );
+
+    try {
+      context.read<NotificationRepository>().sendNotification(notification);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Arrival notification sent'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    }
   }
 
   void _record(BuildContext context, AttendanceStatus status) async {
