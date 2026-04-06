@@ -44,6 +44,9 @@ import 'features/admin/data/repositories/firebase_stats_repository.dart';
 import 'features/admin/presentation/pages/admin_stats_page.dart';
 import 'features/attendance/presentation/pages/edit_student_page.dart';
 import 'features/admin/presentation/bloc/stats_cubit.dart';
+import 'features/bus_tracking/domain/repositories/bus_tracking_repository.dart';
+import 'features/bus_tracking/data/repositories/bus_tracking_repository_impl.dart';
+import 'features/bus_tracking/presentation/cubit/driver_location_cubit.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
@@ -74,6 +77,7 @@ void main() async {
   final dismissalRepository = FirebaseDismissalRepository();
   final notificationRepository = FirebaseNotificationRepository();
   final statsRepository = FirebaseStatsRepository();
+  final busTrackingRepository = BusTrackingRepositoryImpl();
 
   runApp(
     MyApp(
@@ -85,6 +89,7 @@ void main() async {
       broadcastRepository: broadcastRepository,
       dismissalRepository: dismissalRepository,
       statsRepository: statsRepository,
+      busTrackingRepository: busTrackingRepository,
       prefs: prefs,
     ),
   );
@@ -99,6 +104,7 @@ class MyApp extends StatelessWidget {
   final DismissalRepository dismissalRepository;
   final NotificationRepository notificationRepository;
   final StatsRepository statsRepository;
+  final BusTrackingRepository busTrackingRepository;
   final SharedPreferences prefs;
 
   const MyApp({
@@ -111,6 +117,7 @@ class MyApp extends StatelessWidget {
     required this.broadcastRepository,
     required this.dismissalRepository,
     required this.statsRepository,
+    required this.busTrackingRepository,
     required this.prefs,
   });
 
@@ -136,6 +143,9 @@ class MyApp extends StatelessWidget {
           value: notificationRepository,
         ),
         RepositoryProvider<StatsRepository>.value(value: statsRepository),
+        RepositoryProvider<BusTrackingRepository>.value(
+          value: busTrackingRepository,
+        ),
         RepositoryProvider(create: (context) => StorageService()),
       ],
       child: MultiBlocProvider(
@@ -147,6 +157,13 @@ class MyApp extends StatelessWidget {
             ),
           ),
           BlocProvider(create: (_) => ThemeCubit(prefs)),
+          BlocProvider(
+            create:
+                (context) => DriverLocationCubit(
+                  locationService: locationService,
+                  repository: busTrackingRepository,
+                ),
+          ),
         ],
         child: const AppView(),
       ),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/services/location_service.dart';
+import '../../../bus_tracking/domain/repositories/bus_tracking_repository.dart';
+import '../../../bus_tracking/domain/entities/bus_location.dart';
 
 class BusTrackingPage extends StatefulWidget {
   final String busId;
@@ -18,6 +18,13 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
   GoogleMapController? _controller;
   final Set<Marker> _markers = {};
   bool _mapError = false;
+  late final Stream<BusLocationEntity> _busLocationStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _busLocationStream = context.read<BusTrackingRepository>().streamBusLocation(widget.busId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,36 +37,52 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
       appBar: AppBar(
         title: Text('Live Bus Tracking', style: GoogleFonts.outfit()),
       ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: context.read<LocationService>().getBusLocation(widget.busId),
+      body: StreamBuilder<BusLocationEntity>(
+        stream: _busLocationStream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
+          final data = snapshot.data;
+          
+          if (data == null || !data.tripActive) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                    Icons.bus_alert_rounded,
+                    Icons.directions_bus_rounded,
                     size: 64,
                     color: Colors.grey,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Bus is currently offline',
-                    style: GoogleFonts.inter(color: Colors.grey),
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    const _LoadingText()
+                  else
+                    Text(
+                      'Waiting for driver to start trip...',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.grey.withOpacity(0.8),
+                      ),
+                    ),
                 ],
               ),
             );
           }
 
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final lat = data['lat'] as double;
-          final lng = data['lng'] as double;
+          final lat = data.latitude;
+          final lng = data.longitude;
           final pos = LatLng(lat, lng);
 
           _markers.clear();
@@ -73,8 +96,10 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
               infoWindow: InfoWindow(title: 'Bus: ${widget.busId}'),
             ),
           );
-
-          _controller?.animateCamera(CameraUpdate.newLatLng(pos));
+          
+          if (_controller != null) {
+            _controller!.animateCamera(CameraUpdate.newLatLng(pos));
+          }
 
           return Stack(
             children: [
@@ -235,6 +260,46 @@ class _SafeGoogleMapState extends State<_SafeGoogleMap> {
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
       compassEnabled: false,
+    );
+  }
+}
+
+class _LoadingText extends StatefulWidget {
+  const _LoadingText();
+
+  @override
+  State<_LoadingText> createState() => _LoadingTextState();
+}
+
+class _LoadingTextState extends State<_LoadingText> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: Text(
+        'Connecting to live feed...',
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          color: Colors.grey,
+        ),
+      ),
     );
   }
 }

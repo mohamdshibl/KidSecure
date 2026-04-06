@@ -55,6 +55,9 @@ dependencies:
   go_router: any
   flutter_local_notifications: ^17.2.4
   image_picker: any
+  firebase_database: ^12.1.4
+  flutter_animarker: ^3.2.0
+  bloc: ^9.2.0
 
 dev_dependencies:
   flutter_test:

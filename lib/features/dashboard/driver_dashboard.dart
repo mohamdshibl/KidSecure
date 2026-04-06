@@ -8,9 +8,9 @@ import '../auth/presentation/bloc/auth_bloc.dart';
 import '../auth/presentation/bloc/auth_event.dart';
 import '../../core/theme/theme_cubit.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
-import '../../core/services/location_service.dart';
 import '../notifications/domain/models/notification_model.dart';
 import '../notifications/domain/repositories/notification_repository.dart';
+import '../bus_tracking/presentation/cubit/driver_location_cubit.dart';
 import 'package:uuid/uuid.dart';
 
 class DriverDashboard extends StatefulWidget {
@@ -39,12 +39,12 @@ class _DriverDashboardState extends State<DriverDashboard> {
             _ProfileView(
               isSharingLocation: _isSharingLocation,
               onSharingLocationChanged: (val) async {
-                final locationService = context.read<LocationService>();
+                final locationCubit = context.read<DriverLocationCubit>();
                 try {
                   if (val) {
-                    await locationService.startLocationSharing(busId);
+                    await locationCubit.startTrip(busId, user.id);
                   } else {
-                    await locationService.stopLocationSharing();
+                    await locationCubit.endTrip();
                   }
                   setState(() => _isSharingLocation = val);
                 } catch (e) {
