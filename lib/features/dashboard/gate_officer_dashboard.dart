@@ -10,6 +10,7 @@ import '../attendance/domain/repositories/attendance_repository.dart';
 import '../attendance/domain/models/student_model.dart';
 import '../attendance/domain/models/attendance_record.dart';
 import '../../core/theme/theme_cubit.dart';
+import '../../core/localization/language_cubit.dart';
 
 class GateOfficerDashboard extends StatefulWidget {
   const GateOfficerDashboard({super.key});
@@ -23,23 +24,20 @@ class _GateOfficerDashboardState extends State<GateOfficerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: IndexedStack(
-            index: _selectedIndex,
-            children: [
-              _RequestsView(),
-              _HistoryView(),
-              _ScannerView(),
-              _ProfileView(),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            _RequestsView(),
+            _HistoryView(),
+            _ScannerView(),
+            _ProfileView(),
+          ],
         ),
-        bottomNavigationBar: _buildBottomNav(),
       ),
+      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -889,12 +887,21 @@ class _ProfileView extends StatelessWidget {
             activeColor: Colors.orange,
           ),
         ),
-        _SettingsTile(
-          icon: Icons.language_rounded,
-          color: Colors.teal,
-          title: 'اللغة',
-          subtitle: 'العربية',
-          onTap: () {},
+        BlocBuilder<LanguageCubit, Locale>(
+          builder: (context, locale) {
+            return _SettingsTile(
+              icon: Icons.language_rounded,
+              color: Colors.teal,
+              title: 'اللغة / Language',
+              subtitle: locale.languageCode == 'ar' ? 'العربية' : 'English',
+              trailing: Switch(
+                value: locale.languageCode == 'en',
+                onChanged: (_) =>
+                    context.read<LanguageCubit>().toggleLanguage(),
+                activeColor: Colors.teal,
+              ),
+            );
+          },
         ),
       ],
     );
@@ -1132,144 +1139,139 @@ class _ManualSearchDialogState extends State<_ManualSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Dialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'بحث يدوي عن طالب',
-                style: GoogleFonts.notoKufiArabic(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Dialog(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'بحث يدوي عن طالب',
+              style: GoogleFonts.notoKufiArabic(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _searchController,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _searchController,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              onChanged: _performSearch,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'ادخل اسم الطالب...',
+                hintStyle: GoogleFonts.notoKufiArabic(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14,
                 ),
-                onChanged: _performSearch,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'ادخل اسم الطالب...',
-                  hintStyle: GoogleFonts.notoKufiArabic(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 14,
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF3B82F6),
+                ),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-                  prefixIcon: const Icon(
-                    Icons.search_rounded,
-                    color: Color(0xFF3B82F6),
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _searchResults.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        child: Text(
-                          _searchController.text.length < 2
-                              ? 'اكتب حرفين على الأقل للبحث'
-                              : 'لا توجد نتائج',
-                          style: GoogleFonts.notoKufiArabic(
-                            color: const Color(0xFF64748B),
-                          ),
+            ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _searchResults.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Text(
+                        _searchController.text.length < 2
+                            ? 'اكتب حرفين على الأقل للبحث'
+                            : 'لا توجد نتائج',
+                        style: GoogleFonts.notoKufiArabic(
+                          color: const Color(0xFF64748B),
                         ),
-                      )
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: _searchResults.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(color: Colors.white12),
-                        itemBuilder: (context, index) {
-                          final student = _searchResults[index];
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              student.name,
-                              style: GoogleFonts.notoKufiArabic(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              student.grade,
-                              style: GoogleFonts.notoKufiArabic(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontSize: 12,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  onPressed: () => _recordAttendance(
-                                    student,
-                                    AttendanceStatus.checkIn,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.login_rounded,
-                                    color: Colors.green,
-                                  ),
-                                  tooltip: 'حضور',
-                                ),
-                                IconButton(
-                                  onPressed: () => _recordAttendance(
-                                    student,
-                                    AttendanceStatus.checkOut,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.logout_rounded,
-                                    color: Colors.blue,
-                                  ),
-                                  tooltip: 'انصراف',
-                                ),
-                              ],
-                            ),
-                          );
-                        },
                       ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'إغلاق',
-                  style: GoogleFonts.notoKufiArabic(
-                    color: const Color(0xFF64748B),
-                  ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: _searchResults.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(color: Colors.white12),
+                      itemBuilder: (context, index) {
+                        final student = _searchResults[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            student.name,
+                            style: GoogleFonts.notoKufiArabic(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(
+                            student.grade,
+                            style: GoogleFonts.notoKufiArabic(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () => _recordAttendance(
+                                  student,
+                                  AttendanceStatus.checkIn,
+                                ),
+                                icon: const Icon(
+                                  Icons.login_rounded,
+                                  color: Colors.green,
+                                ),
+                                tooltip: 'حضور',
+                              ),
+                              IconButton(
+                                onPressed: () => _recordAttendance(
+                                  student,
+                                  AttendanceStatus.checkOut,
+                                ),
+                                icon: const Icon(
+                                  Icons.logout_rounded,
+                                  color: Colors.blue,
+                                ),
+                                tooltip: 'انصراف',
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'إغلاق',
+                style: GoogleFonts.notoKufiArabic(
+                  color: const Color(0xFF64748B),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

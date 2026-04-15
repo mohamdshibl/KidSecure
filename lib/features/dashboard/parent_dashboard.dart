@@ -7,8 +7,12 @@ import '../attendance/domain/repositories/attendance_repository.dart';
 import '../auth/presentation/bloc/auth_bloc.dart';
 import '../auth/presentation/bloc/auth_event.dart';
 import '../../core/theme/theme_cubit.dart';
+import '../../core/theme/theme_cubit.dart';
+import '../../core/localization/language_cubit.dart';
+import '../../l10n/app_localizations.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
 import '../attendance/domain/models/dismissal_request.dart';
+import '../attendance/domain/models/attendance_record.dart';
 import '../attendance/domain/repositories/dismissal_repository.dart';
 import '../notifications/presentation/pages/notifications_history_page.dart';
 import '../tracking/presentation/pages/bus_tracking_page.dart';
@@ -98,9 +102,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
         unselectedLabelStyle: GoogleFonts.notoKufiArabic(fontSize: 12),
         elevation: 0,
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'الرئيسية',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_rounded),
+            label: AppLocalizations.of(context)?.home ?? 'الرئيسية',
           ),
           BottomNavigationBarItem(
             icon: Stack(
@@ -137,15 +141,15 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 ),
               ],
             ),
-            label: 'التنبيهات',
+            label: AppLocalizations.of(context)?.notifications ?? 'التنبيهات',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.map_rounded),
-            label: 'تتبع',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.map_rounded),
+            label: AppLocalizations.of(context)?.tracking ?? 'تتبع',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'الملف',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_rounded),
+            label: AppLocalizations.of(context)?.profile ?? 'الملف',
           ),
         ],
       ),
@@ -179,7 +183,7 @@ class _HomeView extends StatelessWidget {
           const BroadcastBanner(),
           const SizedBox(height: 24),
           Text(
-            'أبنائي',
+            AppLocalizations.of(context)?.children ?? 'أبنائي',
             style: GoogleFonts.notoKufiArabic(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -203,7 +207,7 @@ class _HomeView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'أهلاً بك، $name',
+              '${AppLocalizations.of(context)?.welcome ?? 'أهلاً بك'}، $name',
               style: GoogleFonts.notoKufiArabic(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -288,7 +292,7 @@ class _ProfileView extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'ولي أمر',
+                        AppLocalizations.of(context)?.parent ?? 'ولي أمر',
                         style: GoogleFonts.notoKufiArabic(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: 12,
@@ -303,12 +307,12 @@ class _ProfileView extends StatelessWidget {
           const SizedBox(height: 40),
           _ProfileTile(
             icon: Icons.settings_rounded,
-            title: 'الإعدادات',
+            title: AppLocalizations.of(context)?.settings ?? 'الإعدادات',
             onTap: () {},
           ),
           _ProfileTile(
             icon: Icons.dark_mode_rounded,
-            title: 'المظهر الداكن',
+            title: AppLocalizations.of(context)?.darkMode ?? 'المظهر الداكن',
             trailing: BlocBuilder<ThemeCubit, ThemeMode>(
               builder: (context, mode) {
                 return Switch(
@@ -320,8 +324,21 @@ class _ProfileView extends StatelessWidget {
             ),
           ),
           _ProfileTile(
+            icon: Icons.language_rounded,
+            title: AppLocalizations.of(context)?.language ?? 'اللغة',
+            trailing: BlocBuilder<LanguageCubit, Locale>(
+              builder: (context, locale) {
+                return Switch(
+                  value: locale.languageCode == 'en',
+                  onChanged: (_) => context.read<LanguageCubit>().toggleLanguage(),
+                  activeColor: Theme.of(context).primaryColor,
+                );
+              },
+            ),
+          ),
+          _ProfileTile(
             icon: Icons.help_outline_rounded,
-            title: 'مركز المساعدة',
+            title: AppLocalizations.of(context)?.helpCenter ?? 'مركز المساعدة',
             onTap: () {},
           ),
           const Spacer(),
@@ -332,7 +349,7 @@ class _ProfileView extends StatelessWidget {
                   context.read<AuthBloc>().add(AuthLogoutRequested()),
               icon: const Icon(Icons.logout_rounded),
               label: Text(
-                'تسجيل الخروج',
+                AppLocalizations.of(context)?.logout ?? 'تسجيل الخروج',
                 style: GoogleFonts.notoKufiArabic(fontWeight: FontWeight.bold),
               ),
               style: OutlinedButton.styleFrom(
@@ -448,7 +465,7 @@ class _StudentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const _StatusBadge(status: 'في المدرسة'),
+              _LiveStatusBadge(studentId: student.id),
             ],
           ),
           _DismissalActions(student: student),
@@ -552,6 +569,55 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+class _LiveStatusBadge extends StatelessWidget {
+  final String studentId;
+  const _LiveStatusBadge({required this.studentId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<AttendanceRecord>>(
+      stream: context.read<AttendanceRepository>().getStudentAttendance(studentId),
+      builder: (context, snapshot) {
+        final records = snapshot.data ?? [];
+        AttendanceStatus? lastStatus;
+        if (records.isNotEmpty) {
+          lastStatus = records.first.status; // already ordered descending
+        }
+
+        String label;
+        Color color;
+
+        if (lastStatus == AttendanceStatus.checkIn) {
+          label = 'في المدرسة';
+          color = Colors.green;
+        } else if (lastStatus == AttendanceStatus.checkOut) {
+          label = 'غادر';
+          color = Colors.blue;
+        } else {
+          label = 'غير محدد';
+          color = Colors.grey;
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.notoKufiArabic(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _EmptyDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -629,7 +695,7 @@ class _QuickActions extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'إجراءات سريعة',
+          AppLocalizations.of(context)?.quickActions ?? 'إجراءات سريعة',
           style: GoogleFonts.notoKufiArabic(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -641,21 +707,21 @@ class _QuickActions extends StatelessWidget {
           children: [
             _ActionItem(
               icon: Icons.bus_alert_rounded,
-              label: 'تتبع الحافلة',
+              label: AppLocalizations.of(context)?.trackBus ?? 'تتبع الحافلة',
               color: Colors.blue,
               onTap: onTrackBus,
             ),
             const SizedBox(width: 16),
             _ActionItem(
               icon: Icons.history_rounded,
-              label: 'السجل',
+              label: AppLocalizations.of(context)?.history ?? 'السجل',
               color: Colors.orange,
               onTap: () => context.push('/attendance-history'),
             ),
             const SizedBox(width: 16),
             _ActionItem(
               icon: Icons.person_add_alt_1_rounded,
-              label: 'أضف طفل',
+              label: AppLocalizations.of(context)?.addStudent ?? 'أضف طفل',
               color: Colors.purple,
               onTap: () => context.push('/add-student'),
             ),

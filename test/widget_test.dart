@@ -19,6 +19,7 @@ import 'package:kidsecure/features/attendance/data/repositories/firebase_dismiss
 import 'package:kidsecure/features/notifications/data/firebase_notification_repository.dart';
 import 'package:kidsecure/features/admin/data/repositories/firebase_stats_repository.dart';
 import 'package:kidsecure/features/bus_tracking/data/repositories/bus_tracking_repository_impl.dart';
+import 'package:kidsecure/core/services/fcm_v1_service.dart';
 
 void main() {
   testWidgets('App initialization test', (WidgetTester tester) async {
@@ -37,6 +38,7 @@ void main() {
         notificationRepository: FirebaseNotificationRepository(),
         statsRepository: FirebaseStatsRepository(),
         busTrackingRepository: BusTrackingRepositoryImpl(),
+        fcmV1Service: FcmV1Service(),
         prefs: prefs,
       ),
     );

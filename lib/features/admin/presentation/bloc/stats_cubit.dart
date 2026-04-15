@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:kidsecure/features/admin/domain/models/admin_stats.dart';
@@ -32,14 +33,22 @@ class StatsError extends StatsState {
 
 class StatsCubit extends Cubit<StatsState> {
   final StatsRepository _repository;
+  StreamSubscription? _subscription;
 
   StatsCubit(this._repository) : super(StatsInitial());
 
   void loadStats() {
     emit(StatsLoading());
-    _repository.getStats().listen(
+    _subscription?.cancel();
+    _subscription = _repository.getStats().listen(
       (stats) => emit(StatsLoaded(stats)),
       onError: (error) => emit(StatsError(error.toString())),
     );
+  }
+
+  @override
+  Future<void> close() {
+    _subscription?.cancel();
+    return super.close();
   }
 }

@@ -1,0 +1,28 @@
+{
+  "@@locale": "ar",
+  "appTitle": "كيد سيكيور",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "login": "تسجيل الدخول",
+  "email": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "parent": "ولي أمر",
+  "gateOfficer": "مسؤول البوابة",
+  "driver": "سائق الحافلة",
+  "home": "الرئيسية",
+  "notifications": "التنبيهات",
+  "tracking": "تتبع",
+  "profile": "الملف",
+  "welcome": "أهلاً بك",
+  "trackBus": "تتبع الحافلة",
+  "history": "السجل",
+  "addStudent": "أضف طفل",
+  "children": "أبنائي",
+  "settings": "الإعدادات",
+  "darkMode": "المظهر الداكن",
+  "language": "اللغة",
+  "helpCenter": "مركز المساعدة",
+  "logout": "تسجيل الخروج",
+  "quickActions": "إجراءات سريعة"
+}

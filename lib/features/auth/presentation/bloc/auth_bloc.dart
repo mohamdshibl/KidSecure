@@ -10,6 +10,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
   final NotificationService _notificationService;
   late final StreamSubscription<UserModel?> _userSubscription;
+  StreamSubscription<String>? _tokenRefreshSubscription;
 
   AuthBloc({
     required AuthRepository authRepository,
@@ -23,18 +24,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _userSubscription = _authRepository.user.listen(
       (user) => add(AuthUserChanged(user)),
     );
+
+    // Listen for FCM token refreshes
+    _tokenRefreshSubscription = _notificationService.onTokenRefresh.listen((token) async {
+      final user = state.user;
+      if (user != null) {
+        await _authRepository.updateFcmToken(user.id, token);
+      }
+    });
   }
 
   Future<void> _onUserChanged(
     AuthUserChanged event,
     Emitter<AuthState> emit,
   ) async {
-    if (event.user != null) {
+    final user = event.user;
+    if (user != null) {
+      // Sync token on login/change if needed
       final token = await _notificationService.getToken();
-      if (token != null && event.user!.fcmToken != token) {
-        await _authRepository.updateFcmToken(event.user!.id, token);
+      if (token != null && user.fcmToken != token) {
+        await _authRepository.updateFcmToken(user.id, token);
       }
-      emit(AuthState.authenticated(event.user!));
+      emit(AuthState.authenticated(user));
     } else {
       emit(const AuthState.unauthenticated());
     }
@@ -47,6 +58,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   @override
   Future<void> close() {
     _userSubscription.cancel();
+    _tokenRefreshSubscription?.cancel();
     return super.close();
   }
 }
+

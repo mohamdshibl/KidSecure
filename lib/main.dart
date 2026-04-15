@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'core/services/fcm_v1_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'firebase_options.dart';
@@ -25,6 +29,7 @@ import 'features/attendance/domain/models/student_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/theme_cubit.dart';
 import 'core/theme/app_theme.dart';
+import 'core/localization/language_cubit.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/location_service.dart';
 import 'features/admin/domain/broadcast_repository.dart';
@@ -49,6 +54,15 @@ import 'features/bus_tracking/data/repositories/bus_tracking_repository_impl.dar
 import 'features/bus_tracking/presentation/cubit/driver_location_cubit.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+/// Top-level function required by Firebase Messaging for background message handling.
+/// MUST be a top-level function — not a static method or closure.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Firebase is already initialized when this is called.
+  debugPrint('Background FCM message received: ${message.messageId}');
+  // No UI work here — only lightweight processing or local notification show.
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
@@ -65,6 +79,9 @@ void main() async {
     }
   }
 
+  // Register the background handler BEFORE Firebase.initializeApp or runApp.
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   final prefs = await SharedPreferences.getInstance();
   final notificationService = NotificationService();
   await notificationService.initialize();
@@ -78,6 +95,7 @@ void main() async {
   final notificationRepository = FirebaseNotificationRepository();
   final statsRepository = FirebaseStatsRepository();
   final busTrackingRepository = BusTrackingRepositoryImpl();
+  final fcmV1Service = FcmV1Service();
 
   runApp(
     MyApp(
@@ -90,6 +108,7 @@ void main() async {
       dismissalRepository: dismissalRepository,
       statsRepository: statsRepository,
       busTrackingRepository: busTrackingRepository,
+      fcmV1Service: fcmV1Service,
       prefs: prefs,
     ),
   );
@@ -105,6 +124,7 @@ class MyApp extends StatelessWidget {
   final NotificationRepository notificationRepository;
   final StatsRepository statsRepository;
   final BusTrackingRepository busTrackingRepository;
+  final FcmV1Service fcmV1Service;
   final SharedPreferences prefs;
 
   const MyApp({
@@ -118,6 +138,7 @@ class MyApp extends StatelessWidget {
     required this.dismissalRepository,
     required this.statsRepository,
     required this.busTrackingRepository,
+    required this.fcmV1Service,
     required this.prefs,
   });
 
@@ -146,6 +167,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider<BusTrackingRepository>.value(
           value: busTrackingRepository,
         ),
+        RepositoryProvider<FcmV1Service>.value(
+          value: fcmV1Service,
+        ),
         RepositoryProvider(create: (context) => StorageService()),
       ],
       child: MultiBlocProvider(
@@ -157,6 +181,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
           BlocProvider(create: (_) => ThemeCubit(prefs)),
+          BlocProvider(create: (_) => LanguageCubit(prefs)),
           BlocProvider(
             create:
                 (context) => DriverLocationCubit(
@@ -180,10 +205,16 @@ class AppView extends StatefulWidget {
 
 class _AppViewState extends State<AppView> {
   late final GoRouter _router;
+  StreamSubscription? _notificationSubscription;
 
   @override
   void initState() {
     super.initState();
+    
+    // Listen for notification taps
+    final notificationService = context.read<NotificationService>();
+    _notificationSubscription = notificationService.navigationStream.listen(_handleNotificationNavigation);
+
     _router = GoRouter(
       initialLocation: '/',
       routes: [
@@ -299,17 +330,58 @@ class _AppViewState extends State<AppView> {
     );
   }
 
+  void _handleNotificationNavigation(Map<String, dynamic> data) {
+    debugPrint('Navigating based on notification data: $data');
+    final type = data['type'];
+    
+    switch (type) {
+      case 'check_in':
+      case 'check_out':
+        _router.push('/notifications');
+        break;
+      case 'bus_approaching':
+        final busId = data['busId'];
+        if (busId != null) {
+          _router.push('/tracking', extra: busId);
+        }
+        break;
+      default:
+        _router.push('/notifications');
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeMode>(
       builder: (context, themeMode) {
-        return MaterialApp.router(
-          title: 'KidSecure',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: themeMode,
-          routerConfig: _router,
+        return BlocBuilder<LanguageCubit, Locale>(
+          builder: (context, locale) {
+            return MaterialApp.router(
+              title: 'KidSecure',
+              debugShowCheckedModeBanner: false,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('ar'), // Arabic
+                Locale('en'), // English
+              ],
+              locale: locale, // Dynamic locale
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeMode,
+              routerConfig: _router,
+            );
+          },
         );
       },
     );

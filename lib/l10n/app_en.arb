@@ -1,0 +1,28 @@
+{
+  "@@locale": "en",
+  "appTitle": "KidSecure",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "login": "Login",
+  "email": "Email",
+  "password": "Password",
+  "parent": "Parent",
+  "gateOfficer": "Gate Officer",
+  "driver": "Bus Driver",
+  "home": "Home",
+  "notifications": "Notifications",
+  "tracking": "Tracking",
+  "profile": "Profile",
+  "welcome": "Welcome",
+  "trackBus": "Track Bus",
+  "history": "History",
+  "addStudent": "Add Student",
+  "children": "My Children",
+  "settings": "Settings",
+  "darkMode": "Dark Mode",
+  "language": "Language",
+  "helpCenter": "Help Center",
+  "logout": "Logout",
+  "quickActions": "Quick Actions"
+}

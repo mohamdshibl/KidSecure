@@ -8,6 +8,7 @@ import '../auth/presentation/bloc/auth_bloc.dart';
 import '../auth/presentation/bloc/auth_event.dart';
 
 import '../../core/theme/theme_cubit.dart';
+import '../../core/localization/language_cubit.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -552,6 +553,19 @@ class _ProfileView extends StatelessWidget {
               trailing: Switch(
                 value: mode == ThemeMode.dark,
                 onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
+              ),
+            );
+          },
+        ),
+        BlocBuilder<LanguageCubit, Locale>(
+          builder: (context, locale) {
+            return _SettingsTile(
+              icon: Icons.language_rounded,
+              label: 'اللغة / Language',
+              trailing: Switch(
+                value: locale.languageCode == 'en',
+                onChanged: (_) => context.read<LanguageCubit>().toggleLanguage(),
+                activeColor: Theme.of(context).primaryColor,
               ),
             );
           },

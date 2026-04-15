@@ -7,10 +7,12 @@ import '../attendance/domain/repositories/attendance_repository.dart';
 import '../auth/presentation/bloc/auth_bloc.dart';
 import '../auth/presentation/bloc/auth_event.dart';
 import '../../core/theme/theme_cubit.dart';
+import '../../core/localization/language_cubit.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
 import '../notifications/domain/models/notification_model.dart';
 import '../notifications/domain/repositories/notification_repository.dart';
 import '../bus_tracking/presentation/cubit/driver_location_cubit.dart';
+import '../../core/services/fcm_v1_service.dart';
 import 'package:uuid/uuid.dart';
 
 class DriverDashboard extends StatefulWidget {
@@ -334,6 +336,14 @@ class _QuickAttendanceButtons extends StatelessWidget {
     try {
       context.read<NotificationRepository>().sendNotification(notification);
 
+      // Also send a real FCM push to the parent's device.
+      context.read<FcmV1Service>().sendToParent(
+        parentId: student.parentId,
+        title: notification.title,
+        body: notification.body,
+        data: {'type': 'bus', 'studentId': student.id},
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Arrival notification sent'),
@@ -379,6 +389,17 @@ class _QuickAttendanceButtons extends StatelessWidget {
         );
 
         context.read<NotificationRepository>().sendNotification(notification);
+
+        // Also send a real FCM push to the parent's device.
+        context.read<FcmV1Service>().sendToParent(
+          parentId: student.parentId,
+          title: notification.title,
+          body: notification.body,
+          data: {
+            'type': status == AttendanceStatus.checkIn ? 'check_in' : 'check_out',
+            'studentId': student.id,
+          },
+        );
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -532,6 +553,19 @@ class _ProfileView extends StatelessWidget {
             onChanged: onSharingLocationChanged,
             activeColor: Theme.of(context).primaryColor,
           ),
+        ),
+        BlocBuilder<LanguageCubit, Locale>(
+          builder: (context, locale) {
+            return _SettingsTile(
+              icon: Icons.language_rounded,
+              label: 'اللغة / Language',
+              trailing: Switch(
+                value: locale.languageCode == 'en',
+                onChanged: (_) => context.read<LanguageCubit>().toggleLanguage(),
+                activeColor: Theme.of(context).primaryColor,
+              ),
+            );
+          },
         ),
       ],
     );
