@@ -709,6 +709,54 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حافلة {name} تقترب، ستصل خلال دقيقة تقريباً.'**
   String busApproachingBody(String name);
+
+  /// No description provided for @scanStudentQr.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح رمز الطالب'**
+  String get scanStudentQr;
+
+  /// No description provided for @alignQrCode.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضع كود التلميذ داخل المربع للمسح'**
+  String get alignQrCode;
+
+  /// No description provided for @studentNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطالب غير موجود'**
+  String get studentNotFound;
+
+  /// No description provided for @errorProcessingScan.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ في معالجة المسح'**
+  String get errorProcessingScan;
+
+  /// No description provided for @gradeLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصف: {grade}'**
+  String gradeLabel(String grade);
+
+  /// No description provided for @checkInAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل حضور'**
+  String get checkInAction;
+
+  /// No description provided for @checkOutAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل انصراف'**
+  String get checkOutAction;
+
+  /// No description provided for @scanSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم المسح بنجاح: {status}'**
+  String scanSuccess(Object status);
 }
 
 class _AppLocalizationsDelegate

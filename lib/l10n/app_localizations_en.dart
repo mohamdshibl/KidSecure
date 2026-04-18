@@ -327,4 +327,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String busApproachingBody(String name) {
     return '$name\'s bus is approaching, will arrive in about a minute.';
   }
+
+  @override
+  String get scanStudentQr => 'Scan Student QR';
+
+  @override
+  String get alignQrCode => 'Align student QR code within the frame';
+
+  @override
+  String get studentNotFound => 'Student not found';
+
+  @override
+  String get errorProcessingScan => 'Error processing scan';
+
+  @override
+  String gradeLabel(String grade) {
+    return 'Grade: $grade';
+  }
+
+  @override
+  String get checkInAction => 'Check In';
+
+  @override
+  String get checkOutAction => 'Check Out';
+
+  @override
+  String scanSuccess(Object status) {
+    return 'Scan Success: $status';
+  }
 }

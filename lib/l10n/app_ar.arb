@@ -124,5 +124,23 @@
     "placeholders": {
       "name": { "type": "String" }
     }
+  },
+  "scanStudentQr": "مسح رمز الطالب",
+  "alignQrCode": "ضع كود التلميذ داخل المربع للمسح",
+  "studentNotFound": "الطالب غير موجود",
+  "errorProcessingScan": "خطأ في معالجة المسح",
+  "gradeLabel": "الصف: {grade}",
+  "@gradeLabel": {
+    "placeholders": {
+      "grade": { "type": "String" }
+    }
+  },
+  "checkInAction": "تسجيل حضور",
+  "checkOutAction": "تسجيل انصراف",
+  "scanSuccess": "تم المسح بنجاح: {status}",
+  "@scanSuccess": {
+    "placeholders": {
+      "status": { "type": "Object" }
+    }
   }
 }

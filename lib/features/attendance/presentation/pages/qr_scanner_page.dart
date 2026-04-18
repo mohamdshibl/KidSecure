@@ -4,6 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../../domain/models/attendance_record.dart';
+import '../../domain/models/dismissal_request.dart';
+import '../../domain/repositories/dismissal_repository.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import 'package:kidsecure/l10n/app_localizations.dart';
 
 class QrScannerPage extends StatefulWidget {
   const QrScannerPage({super.key});
@@ -19,7 +23,10 @@ class _QrScannerPageState extends State<QrScannerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Scan Student QR', style: GoogleFonts.outfit()),
+        title: Text(
+          AppLocalizations.of(context)?.scanStudentQr ?? 'Scan Student QR',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -72,7 +79,8 @@ class _QrScannerPageState extends State<QrScannerPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(40),
             child: Text(
-              'Align student QR code within the frame',
+              AppLocalizations.of(context)?.alignQrCode ??
+                  'Align student QR code within the frame',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
             ),
@@ -91,31 +99,61 @@ class _QrScannerPageState extends State<QrScannerPage> {
       if (!mounted) return;
 
       if (student == null) {
-        _showResult(context, 'Student not found', Colors.red);
+        if (mounted) {
+          _showResult(
+            context,
+            AppLocalizations.of(context)?.studentNotFound ?? 'Student not found',
+            Colors.red,
+          );
+        }
       } else {
-        // Simple logic: If checked in today, check out. Otherwise check in.
-        // For a prototype, we'll just show a dialog to choose.
-        _showAttendanceDialog(context, student);
+        if (mounted) {
+          // Await the dialog to close before we allow scanning again
+          await _showAttendanceDialog(context, student);
+        }
       }
     } catch (e) {
-      if (mounted) _showResult(context, 'Error processing scan', Colors.red);
+      if (mounted) {
+        _showResult(
+          context,
+          AppLocalizations.of(context)?.errorProcessingScan ??
+              'Error processing scan',
+          Colors.red,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
-  void _showAttendanceDialog(BuildContext context, dynamic student) {
-    showModalBottomSheet(
+  Future<void> _showAttendanceDialog(BuildContext context, dynamic student) async {
+    await showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
+      builder: (context) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              child: Icon(Icons.person, size: 40, color: Theme.of(context).primaryColor),
+            ),
+            const SizedBox(height: 16),
             Text(
               student.name,
               style: GoogleFonts.outfit(
@@ -126,58 +164,151 @@ class _QrScannerPageState extends State<QrScannerPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Grade: ${student.grade}',
+              AppLocalizations.of(context)?.gradeLabel(student.grade) ??
+                  'Grade: ${student.grade}',
               style: GoogleFonts.inter(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 32),
+            
+            // Show Active Dismissal Request if any
+            StreamBuilder<DismissalRequest?>(
+              stream: context.read<DismissalRepository>().getActiveRequestForStudent(student.id, ''),
+              builder: (context, snapshot) {
+                final activeRequest = snapshot.data;
+                if (activeRequest != null) {
+                  return Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.hail_rounded, color: Colors.orange),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Pending Pickup Request by ${activeRequest.parentName}',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.orange.shade800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _handleDismissal(context, activeRequest),
+                          icon: const Icon(Icons.check_circle_rounded),
+                          label: const Text('Complete Dismissal'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 40),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: () => _register(
                       context,
                       student.id,
                       AttendanceStatus.checkIn,
                     ),
+                    icon: const Icon(Icons.login_rounded),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text('Check In'),
+                    label: Text(
+                      AppLocalizations.of(context)?.checkInAction ?? 'Check In',
+                      style: GoogleFonts.notoKufiArabic(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: () => _register(
                       context,
                       student.id,
                       AttendanceStatus.checkOut,
                     ),
+                    icon: const Icon(Icons.logout_rounded),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text('Check Out'),
+                    label: Text(
+                      AppLocalizations.of(context)?.checkOutAction ?? 'Check Out',
+                      style: GoogleFonts.notoKufiArabic(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _handleDismissal(BuildContext context, DismissalRequest request) async {
+    Navigator.pop(context); // Close bottom sheet
+    
+    final dismissalRepo = context.read<DismissalRepository>();
+    final attendanceRepo = context.read<AttendanceRepository>();
+    
+    try {
+      // 1. Record checkout
+      final record = AttendanceRecord(
+        id: '',
+        studentId: request.studentId,
+        timestamp: DateTime.now(),
+        status: AttendanceStatus.checkOut,
+        location: 'Scan Confirmation',
+      );
+      await attendanceRepo.recordAttendance(record);
+
+      // 2. Complete dismissal
+      await dismissalRepo.updateDismissalStatus(request.id, DismissalStatus.completed);
+
+      if (context.mounted) {
+        _showResult(context, 'Dismissal Completed Successfully', Colors.green);
+      }
+    } catch (e) {
+      if (context.mounted) _showResult(context, 'Error: $e', Colors.red);
+    }
   }
 
   Future<void> _register(
@@ -195,11 +326,14 @@ class _QrScannerPageState extends State<QrScannerPage> {
     );
 
     await context.read<AttendanceRepository>().recordAttendance(record);
-    _showResult(
-      context,
-      'Success: ${status.toString().split('.').last}',
-      Colors.green,
-    );
+    if (context.mounted) {
+      _showResult(
+        context,
+        AppLocalizations.of(context)?.scanSuccess(status.toString().split('.').last) ??
+            'Success: ${status.toString().split('.').last}',
+        Colors.green,
+      );
+    }
   }
 
   void _showResult(BuildContext context, String message, Color color) {

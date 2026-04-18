@@ -327,4 +327,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String busApproachingBody(String name) {
     return 'حافلة $name تقترب، ستصل خلال دقيقة تقريباً.';
   }
+
+  @override
+  String get scanStudentQr => 'مسح رمز الطالب';
+
+  @override
+  String get alignQrCode => 'ضع كود التلميذ داخل المربع للمسح';
+
+  @override
+  String get studentNotFound => 'الطالب غير موجود';
+
+  @override
+  String get errorProcessingScan => 'خطأ في معالجة المسح';
+
+  @override
+  String gradeLabel(String grade) {
+    return 'الصف: $grade';
+  }
+
+  @override
+  String get checkInAction => 'تسجيل حضور';
+
+  @override
+  String get checkOutAction => 'تسجيل انصراف';
+
+  @override
+  String scanSuccess(Object status) {
+    return 'تم المسح بنجاح: $status';
+  }
 }

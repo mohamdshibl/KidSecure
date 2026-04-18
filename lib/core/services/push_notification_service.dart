@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
 class PushNotificationService {
   /// We mock the backend request here.
   /// In a production environment, this should call your Cloud Function
@@ -19,7 +16,8 @@ class PushNotificationService {
         body = 'The school bus for $studentName is approaching your location.';
       } else if (notificationType == 'ARRIVING') {
         title = 'Arriving in 1 minute';
-        body = 'The school bus for $studentName will arrive in approximately 1 minute.';
+        body =
+            'The school bus for $studentName will arrive in approximately 1 minute.';
       }
 
       print('Mock API Call: Sending FCM to Parent $parentId');
@@ -36,9 +34,9 @@ class PushNotificationService {
       //     'body': body,
       //   }),
       // );
-      
+
       // if (response.statusCode == 200) return true;
-      
+
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 500));
       return true;

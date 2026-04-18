@@ -124,5 +124,23 @@
     "placeholders": {
       "name": { "type": "String" }
     }
+  },
+  "scanStudentQr": "Scan Student QR",
+  "alignQrCode": "Align student QR code within the frame",
+  "studentNotFound": "Student not found",
+  "errorProcessingScan": "Error processing scan",
+  "gradeLabel": "Grade: {grade}",
+  "@gradeLabel": {
+    "placeholders": {
+      "grade": { "type": "String" }
+    }
+  },
+  "checkInAction": "Check In",
+  "checkOutAction": "Check Out",
+  "scanSuccess": "Scan Success: {status}",
+  "@scanSuccess": {
+    "placeholders": {
+      "status": { "type": "Object" }
+    }
   }
 }
