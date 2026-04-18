@@ -69,8 +69,262 @@ class AppLocalizationsAr extends AppLocalizations {
   String get helpCenter => 'مركز المساعدة';
 
   @override
+  String get quickActions => 'إجراءات سريعة';
+
+  @override
+  String get dashboard => 'لوحة القيادة';
+
+  @override
+  String get adminConsole => 'لوحة الإدارة';
+
+  @override
+  String get emergency => 'طوارئ';
+
+  @override
+  String get criticalAlerts => 'تنبيهات حرجة';
+
+  @override
+  String get broadcast => 'بث';
+
+  @override
+  String get generalUpdates => 'تحديثات عامة';
+
+  @override
+  String get stats => 'الإحصائيات';
+
+  @override
+  String get viewActivity => 'عرض النشاط';
+
+  @override
+  String get sentBroadcasts => 'الرسائل المرسلة';
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get noUsersFound => 'لم يتم العثور على مستخدمين';
+
+  @override
+  String get schoolAdministrator => 'مدير المدرسة';
+
+  @override
+  String get addStaff => 'إضافة موظف';
+
+  @override
   String get logout => 'تسجيل الخروج';
 
   @override
-  String get quickActions => 'إجراءات سريعة';
+  String get pickupRequest => 'طلب استلام';
+
+  @override
+  String get requestSentSuccessfully => 'تم إرسال طلب الانصراف بنجاح!';
+
+  @override
+  String get inSchool => 'في المدرسة';
+
+  @override
+  String get leftSchool => 'غادر';
+
+  @override
+  String get onBus => 'في الحافلة';
+
+  @override
+  String get notSpecified => 'غير محدد';
+
+  @override
+  String get requests => 'الطلبات';
+
+  @override
+  String get dismissalRequests => 'طلبات الانصراف';
+
+  @override
+  String get liveConnected => 'متصل مباشر';
+
+  @override
+  String get searchStudentHint => 'البحث باسم الطالب أو الرقم التعريفي...';
+
+  @override
+  String get activeRequests => 'طلبات نشطة';
+
+  @override
+  String get viewAll => 'عرض الكل';
+
+  @override
+  String get errorFetchingData => 'حدث خطأ في جلب البيانات';
+
+  @override
+  String get createFirestoreIndex =>
+      'يرجى إنشاء الفهرس المطلوب في Firestore console.';
+
+  @override
+  String get noActiveRequests => 'لا توجد طلبات نشطة حالياً';
+
+  @override
+  String get parentLocationRadar => 'موقع أولياء الأمور (المنطقة الجغرافية)';
+
+  @override
+  String get mainGate => 'البوابة الرئيسية';
+
+  @override
+  String get autoUpdate => 'تحديث تلقائي';
+
+  @override
+  String get pending => 'قيد الانتظار';
+
+  @override
+  String get arrivingSoon => 'قادم قريباً';
+
+  @override
+  String get atGate => 'عند البوابة';
+
+  @override
+  String get completed => 'تم الانصراف';
+
+  @override
+  String get cancelled => 'ملغي';
+
+  @override
+  String get authorizedPerson => 'المصرح له';
+
+  @override
+  String get confirmDismissal => 'تأكيد الخروج';
+
+  @override
+  String get requestsHistory => 'سجل الطلبات';
+
+  @override
+  String get latestCompletedRequests => 'أحدث الطلبات المنتهية';
+
+  @override
+  String get historyEmpty => 'السجل فارغ حالياً';
+
+  @override
+  String get quickQrScanner => 'ماسح الرموز السريع';
+
+  @override
+  String get qrScannerDesc =>
+      'قم بمسح الكود الخاص بالطالب للتحقق الفوري وتسجيل الحضور أو الانصراف.';
+
+  @override
+  String get startCamera => 'تشغيل الكاميرا';
+
+  @override
+  String get manualChildSearch => 'بحث يدوي عن طفل';
+
+  @override
+  String get profileScreen => 'الملف الشخصي';
+
+  @override
+  String get gateOfficerRoleLong => 'ضابط أمن البوابة';
+
+  @override
+  String get appSettings => 'التطبيق';
+
+  @override
+  String get supportAndHelp => 'الدعم والمساعدة';
+
+  @override
+  String get aboutApp => 'عن التطبيق';
+
+  @override
+  String get manualStudentSearch => 'بحث يدوي عن طالب';
+
+  @override
+  String get enterStudentName => 'ادخل اسم الطالب...';
+
+  @override
+  String get typeTwoCharsToSearch => 'اكتب حرفين على الأقل للبحث';
+
+  @override
+  String get noResults => 'لا توجد نتائج';
+
+  @override
+  String get checkIn => 'حضور';
+
+  @override
+  String get checkOut => 'انصراف';
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
+  String attendanceCheckInSuccess(Object name) {
+    return 'تم تسجيل الحضور لـ $name';
+  }
+
+  @override
+  String attendanceCheckOutSuccess(Object name) {
+    return 'تم تسجيل الانصراف لـ $name';
+  }
+
+  @override
+  String get arabic => 'العربية';
+
+  @override
+  String get english => 'الإنجليزية';
+
+  @override
+  String get scanner => 'ماسح';
+
+  @override
+  String get languageSetting => 'اللغة';
+
+  @override
+  String get busDriverDashboard => 'لوحة سائق الحافلة';
+
+  @override
+  String get studentManifest => 'قائمة الطلاب';
+
+  @override
+  String get noStudentsAssigned => 'لا يوجد طلاب مسجلين لهذه الحافلة.';
+
+  @override
+  String busIdLabel(String id) {
+    return 'رقم الحافلة: $id';
+  }
+
+  @override
+  String get liveTrackingEnabled => 'تتبع الموقع مفعل';
+
+  @override
+  String get liveStudentList => 'قائمة الطلاب المباشرة';
+
+  @override
+  String get pickup => 'ركوب';
+
+  @override
+  String get dropoff => 'نزول';
+
+  @override
+  String get notifyNearArrival => 'تنبيه اقتراب';
+
+  @override
+  String get arrivalNotificationSent => 'تم إرسال تنبيه الاقتراب';
+
+  @override
+  String get busUpdate => 'تحديث الحافلة';
+
+  @override
+  String onBusNow(String name) {
+    return '$name ركب الحافلة الآن';
+  }
+
+  @override
+  String offBusNow(String name) {
+    return '$name نزل من الحافلة الآن';
+  }
+
+  @override
+  String get pickedUpSuccessfully => 'تم تسجيل الركوب بنجاح';
+
+  @override
+  String get droppedOffSuccessfully => 'تم تسجيل النزول بنجاح';
+
+  @override
+  String get busArrivalAlert => 'تنبيه اقتراب الحافلة';
+
+  @override
+  String busApproachingBody(String name) {
+    return 'حافلة $name تقترب، ستصل خلال دقيقة تقريباً.';
+  }
 }

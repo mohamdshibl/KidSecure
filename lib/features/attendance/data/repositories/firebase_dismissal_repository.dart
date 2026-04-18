@@ -32,13 +32,14 @@ class FirebaseDismissalRepository implements DismissalRepository {
             DismissalStatus.atGate.toString().split('.').last,
           ],
         )
-        // Note: Ordering might require an index in Firestore since we use a whereIn and orderBy
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
+          final requests = snapshot.docs.map((doc) {
             return DismissalRequest.fromMap(doc.id, doc.data());
           }).toList();
+          // Sort in memory to avoid index requirements
+          requests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return requests;
         });
   }
 
@@ -53,12 +54,50 @@ class FirebaseDismissalRepository implements DismissalRepository {
             DismissalStatus.cancelled.toString().split('.').last,
           ],
         )
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
+          final requests = snapshot.docs.map((doc) {
             return DismissalRequest.fromMap(doc.id, doc.data());
           }).toList();
+          // Sort in memory to avoid index requirements
+          requests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return requests;
         });
+  }
+
+  @override
+  Stream<DismissalRequest?> getActiveRequestForStudent(String studentId, String parentId) {
+    return _firestore
+        .collection('dismissal_requests')
+        .where('studentId', isEqualTo: studentId)
+        .where('parentId', isEqualTo: parentId)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isEmpty) return null;
+
+      final activeStatuses = [
+        DismissalStatus.pending.toString().split('.').last,
+        DismissalStatus.arrivingSoon.toString().split('.').last,
+        DismissalStatus.atGate.toString().split('.').last,
+      ];
+
+      final activeDocs = snapshot.docs.where((doc) {
+        final status = doc.get('status') as String?;
+        return activeStatuses.contains(status);
+      }).toList();
+
+      if (activeDocs.isEmpty) return null;
+
+      // Sort by timestamp to get the latest active request
+      activeDocs.sort((a, b) {
+        final aTime = a.get('timestamp') as Timestamp?;
+        final bTime = b.get('timestamp') as Timestamp?;
+        if (aTime == null || bTime == null) return 0;
+        return bTime.compareTo(aTime);
+      });
+
+      final doc = activeDocs.first;
+      return DismissalRequest.fromMap(doc.id, doc.data());
+    });
   }
 }

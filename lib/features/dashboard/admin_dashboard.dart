@@ -9,6 +9,7 @@ import '../auth/presentation/bloc/auth_event.dart';
 
 import '../../core/theme/theme_cubit.dart';
 import '../../core/localization/language_cubit.dart';
+import '../../l10n/app_localizations.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -45,7 +46,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               backgroundColor: Theme.of(context).primaryColor,
               icon: const Icon(Icons.person_add_rounded, color: Colors.white),
               label: Text(
-                'Add Staff',
+                AppLocalizations.of(context)?.addStaff ?? 'Add Staff',
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -79,14 +80,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
         unselectedLabelStyle: GoogleFonts.outfit(fontSize: 12),
         elevation: 0,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_rounded),
+            label: AppLocalizations.of(context)?.dashboard ?? 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.person_rounded),
+            label: AppLocalizations.of(context)?.profile ?? 'Profile',
           ),
         ],
       ),
@@ -109,7 +110,7 @@ class _HomeView extends StatelessWidget {
       slivers: [
         SliverAppBar(
           title: Text(
-            'Admin Console',
+            AppLocalizations.of(context)?.adminConsole ?? 'Admin Console',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           ),
           elevation: 0,
@@ -138,8 +139,8 @@ class _HomeView extends StatelessWidget {
             children: [
               Expanded(
                 child: _QuickActionCard(
-                  title: 'Emergency',
-                  subtitle: 'Critical alerts',
+                  title: AppLocalizations.of(context)?.emergency ?? 'Emergency',
+                  subtitle: AppLocalizations.of(context)?.criticalAlerts ?? 'Critical alerts',
                   icon: Icons.emergency_share_rounded,
                   color: Theme.of(context).colorScheme.error,
                   onTap: () => context.push('/admin/emergency-broadcast'),
@@ -148,8 +149,8 @@ class _HomeView extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: _QuickActionCard(
-                  title: 'Broadcast',
-                  subtitle: 'General updates',
+                  title: AppLocalizations.of(context)?.broadcast ?? 'Broadcast',
+                  subtitle: AppLocalizations.of(context)?.generalUpdates ?? 'General updates',
                   icon: Icons.campaign_rounded,
                   color: Colors.amber,
                   onTap: () => context.push('/admin/broadcast'),
@@ -162,8 +163,8 @@ class _HomeView extends StatelessWidget {
             children: [
               Expanded(
                 child: _QuickActionCard(
-                  title: 'Stats',
-                  subtitle: 'View activity',
+                  title: AppLocalizations.of(context)?.stats ?? 'Stats',
+                  subtitle: AppLocalizations.of(context)?.viewActivity ?? 'View activity',
                   icon: Icons.analytics_rounded,
                   color: Theme.of(context).primaryColor,
                   onTap: () => context.push('/admin/stats'),
@@ -172,8 +173,8 @@ class _HomeView extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: _QuickActionCard(
-                  title: 'History',
-                  subtitle: 'Sent broadcasts',
+                  title: AppLocalizations.of(context)?.history ?? 'History',
+                  subtitle: AppLocalizations.of(context)?.sentBroadcasts ?? 'Sent broadcasts',
                   icon: Icons.history_rounded,
                   color: Colors.indigo,
                   onTap: () => context.push('/admin/broadcast-history'),
@@ -196,7 +197,7 @@ class _HomeView extends StatelessWidget {
         child: Row(
           children: [
             _FilterChip(
-              label: 'All',
+              label: AppLocalizations.of(context)?.all ?? 'All',
               isSelected: filterRole == null,
               onSelected: () => onFilterRoleChanged(null),
             ),
@@ -323,7 +324,7 @@ class _UserList extends StatelessWidget {
           return SliverFillRemaining(
             child: Center(
               child: Text(
-                'No users found',
+                AppLocalizations.of(context)?.noUsersFound ?? 'No users found',
                 style: GoogleFonts.inter(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -455,7 +456,7 @@ class _ProfileView extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
           title: Text(
-            'Profile',
+            AppLocalizations.of(context)?.profile ?? 'Profile',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 20,
@@ -520,7 +521,7 @@ class _ProfileView extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'School Administrator',
+                  AppLocalizations.of(context)?.schoolAdministrator ?? 'School Administrator',
                   style: GoogleFonts.inter(
                     color: Colors.white.withOpacity(0.8),
                     fontSize: 12,
@@ -539,7 +540,7 @@ class _ProfileView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Settings',
+          AppLocalizations.of(context)?.settings ?? 'Settings',
           style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
@@ -549,7 +550,7 @@ class _ProfileView extends StatelessWidget {
               icon: mode == ThemeMode.dark
                   ? Icons.light_mode_rounded
                   : Icons.dark_mode_rounded,
-              label: 'Dark Mode',
+              label: AppLocalizations.of(context)?.darkMode ?? 'Dark Mode',
               trailing: Switch(
                 value: mode == ThemeMode.dark,
                 onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
@@ -561,7 +562,7 @@ class _ProfileView extends StatelessWidget {
           builder: (context, locale) {
             return _SettingsTile(
               icon: Icons.language_rounded,
-              label: 'اللغة / Language',
+              label: AppLocalizations.of(context)?.language ?? 'Language',
               trailing: Switch(
                 value: locale.languageCode == 'en',
                 onChanged: (_) => context.read<LanguageCubit>().toggleLanguage(),
@@ -580,7 +581,7 @@ class _ProfileView extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
         icon: const Icon(Icons.logout_rounded),
-        label: const Text('Logout'),
+        label: Text(AppLocalizations.of(context)?.logout ?? 'Logout'),
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.error.withOpacity(0.1),
           foregroundColor: Theme.of(context).colorScheme.error,

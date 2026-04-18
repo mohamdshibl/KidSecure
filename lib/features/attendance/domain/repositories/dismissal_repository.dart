@@ -5,4 +5,5 @@ abstract class DismissalRepository {
   Future<void> updateDismissalStatus(String requestId, DismissalStatus status);
   Stream<List<DismissalRequest>> getActiveRequests();
   Stream<List<DismissalRequest>> getRequestsHistory();
+  Stream<DismissalRequest?> getActiveRequestForStudent(String studentId, String parentId);
 }

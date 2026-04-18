@@ -19,12 +19,14 @@ class FirebaseAttendanceRepository implements AttendanceRepository {
     return _firestore
         .collection('attendance')
         .where('studentId', isEqualTo: studentId)
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
+          final records = snapshot.docs
               .map((doc) => AttendanceRecord.fromMap(doc.data(), doc.id))
               .toList();
+          // Sort in memory to avoid index requirements
+          records.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return records;
         });
   }
 

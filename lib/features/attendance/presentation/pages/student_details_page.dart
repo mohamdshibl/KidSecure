@@ -4,9 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/models/student_model.dart';
+import '../../domain/models/attendance_record.dart';
+import '../../domain/models/child_state.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../../../auth/domain/user_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class StudentDetailsPage extends StatelessWidget {
   final StudentModel student;
@@ -72,6 +75,8 @@ class StudentDetailsPage extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: 12),
+        _StudentStateBadge(studentId: student.id),
       ],
     );
   }
@@ -270,6 +275,68 @@ class StudentDetailsPage extends StatelessWidget {
           );
         }
       }
+    }
+  }
+}
+
+class _StudentStateBadge extends StatelessWidget {
+  final String studentId;
+
+  const _StudentStateBadge({required this.studentId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<AttendanceRecord>>(
+      stream: context.read<AttendanceRepository>().getStudentAttendance(studentId),
+      builder: (context, snapshot) {
+        final childState = (snapshot.data ?? []).resolveChildState();
+        final color = _colorForState(childState);
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            _labelForState(context, childState),
+            style: GoogleFonts.inter(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _labelForState(BuildContext context, ChildState state) {
+    switch (state) {
+      case ChildState.inSchool:
+        return AppLocalizations.of(context)?.inSchool ?? 'In School';
+      case ChildState.onBus:
+        return AppLocalizations.of(context)?.onBus ?? 'On Bus';
+      case ChildState.leftSchool:
+        return AppLocalizations.of(context)?.leftSchool ?? 'Left';
+      case ChildState.absent:
+        return 'Absent';
+      case ChildState.unknown:
+        return AppLocalizations.of(context)?.notSpecified ?? 'Not Specified';
+    }
+  }
+
+  Color _colorForState(ChildState state) {
+    switch (state) {
+      case ChildState.inSchool:
+        return Colors.green;
+      case ChildState.onBus:
+        return Colors.orange;
+      case ChildState.leftSchool:
+        return Colors.blue;
+      case ChildState.absent:
+        return Colors.orange;
+      case ChildState.unknown:
+        return Colors.grey;
     }
   }
 }

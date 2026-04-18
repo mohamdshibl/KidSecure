@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
 import '../attendance/domain/models/dismissal_request.dart';
 import '../attendance/domain/models/attendance_record.dart';
+import '../attendance/domain/models/child_state.dart';
 import '../attendance/domain/repositories/dismissal_repository.dart';
 import '../notifications/presentation/pages/notifications_history_page.dart';
 import '../tracking/presentation/pages/bus_tracking_page.dart';
@@ -34,13 +35,25 @@ class _ParentDashboardState extends State<ParentDashboard> {
   @override
   void initState() {
     super.initState();
+    _initStreams();
+  }
+
+  void _initStreams() {
     final user = context.read<AuthBloc>().state.user!;
-    _studentsStream = context.read<AttendanceRepository>().getStudentsByParent(
-      user.id,
-    );
-    _notificationsStream = context
-        .read<NotificationRepository>()
-        .getNotifications(user.id);
+    setState(() {
+      _studentsStream = context.read<AttendanceRepository>().getStudentsByParent(
+        user.id,
+      );
+      _notificationsStream = context
+          .read<NotificationRepository>()
+          .getNotifications(user.id);
+    });
+  }
+
+  Future<void> _onRefresh() async {
+    _initStreams();
+    // Small delay to make the spinner visible if the stream updates instantly
+    await Future.delayed(const Duration(milliseconds: 800));
   }
 
   @override
@@ -63,6 +76,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   user: user,
                   students: students,
                   onTrackBus: () => setState(() => _selectedIndex = 2),
+                  onRefresh: _onRefresh,
                 ),
                 const NotificationsHistoryPage(),
                 busId != null
@@ -161,40 +175,54 @@ class _HomeView extends StatelessWidget {
   final dynamic user;
   final List<StudentModel> students;
   final VoidCallback onTrackBus;
+  final RefreshCallback onRefresh;
   const _HomeView({
     required this.user,
     required this.students,
     required this.onTrackBus,
+    required this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (students.isEmpty) {
-      return _EmptyDashboard();
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(context, user.name),
-          const SizedBox(height: 24),
-          const BroadcastBanner(),
-          const SizedBox(height: 24),
-          Text(
-            AppLocalizations.of(context)?.children ?? 'أبنائي',
-            style: GoogleFonts.notoKufiArabic(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: Theme.of(context).primaryColor,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: MediaQuery.of(context).size.height,
+        ),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context, user.name),
+              const SizedBox(height: 24),
+              const BroadcastBanner(),
+              const SizedBox(height: 24),
+              Text(
+                AppLocalizations.of(context)?.children ?? 'أبنائي',
+                style: GoogleFonts.notoKufiArabic(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (students.isEmpty)
+                Center(child: Padding(
+                  padding: const EdgeInsets.only(top: 100),
+                  child: _EmptyDashboard(),
+                ))
+              else
+                ...students.map((student) => _StudentCard(student: student)),
+              const SizedBox(height: 32),
+              _QuickActions(onTrackBus: onTrackBus),
+            ],
           ),
-          const SizedBox(height: 16),
-          ...students.map((student) => _StudentCard(student: student)),
-          const SizedBox(height: 32),
-          _QuickActions(onTrackBus: onTrackBus),
-        ],
+        ),
       ),
     );
   }
@@ -203,26 +231,28 @@ class _HomeView extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${AppLocalizations.of(context)?.welcome ?? 'أهلاً بك'}، $name',
-              style: GoogleFonts.notoKufiArabic(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${AppLocalizations.of(context)?.welcome ?? 'أهلاً بك'}، $name',
+                style: GoogleFonts.notoKufiArabic(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              "تابع سلامة أبنائك بانتظام.",
-              style: GoogleFonts.notoKufiArabic(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              const SizedBox(height: 4),
+              Text(
+                "تابع سلامة أبنائك بانتظام.",
+                style: GoogleFonts.notoKufiArabic(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, mode) {
@@ -306,11 +336,6 @@ class _ProfileView extends StatelessWidget {
           ),
           const SizedBox(height: 40),
           _ProfileTile(
-            icon: Icons.settings_rounded,
-            title: AppLocalizations.of(context)?.settings ?? 'الإعدادات',
-            onTap: () {},
-          ),
-          _ProfileTile(
             icon: Icons.dark_mode_rounded,
             title: AppLocalizations.of(context)?.darkMode ?? 'المظهر الداكن',
             trailing: BlocBuilder<ThemeCubit, ThemeMode>(
@@ -335,11 +360,6 @@ class _ProfileView extends StatelessWidget {
                 );
               },
             ),
-          ),
-          _ProfileTile(
-            icon: Icons.help_outline_rounded,
-            title: AppLocalizations.of(context)?.helpCenter ?? 'مركز المساعدة',
-            onTap: () {},
           ),
           const Spacer(),
           SizedBox(
@@ -482,65 +502,180 @@ class _DismissalActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final parent = context.read<AuthBloc>().state.user!;
-                final request = DismissalRequest(
-                  id: '',
-                  studentId: student.id,
-                  studentName: student.name,
-                  studentGrade: student.grade,
-                  parentId: parent.id,
-                  parentName: parent.name,
-                  status: DismissalStatus.pending,
-                  timestamp: DateTime.now(),
-                );
+    final parentId = context.read<AuthBloc>().state.user?.id ?? '';
+    return StreamBuilder<DismissalRequest?>(
+      stream: context.read<DismissalRepository>().getActiveRequestForStudent(
+        student.id,
+        parentId,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          );
+        }
+        final activeRequest = snapshot.data;
 
-                try {
-                  await context.read<DismissalRepository>().requestDismissal(
-                    request,
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'تم إرسال طلب الانصراف بنجاح!',
-                          style: GoogleFonts.notoKufiArabic(),
-                        ),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('خطأ: $e')));
-                  }
-                }
-              },
-              icon: const Icon(Icons.hail_rounded, size: 18),
-              label: Text(
-                'طلب استلام',
-                style: GoogleFonts.notoKufiArabic(fontWeight: FontWeight.bold),
+        return StreamBuilder<List<AttendanceRecord>>(
+          stream: context.read<AttendanceRepository>().getStudentAttendance(student.id),
+          builder: (context, attendanceSnapshot) {
+            final childState = (attendanceSnapshot.data ?? []).resolveChildState();
+            
+            // If child already left, don't allow new requests
+            if (activeRequest == null && (childState == ChildState.leftSchool || childState == ChildState.absent)) {
+              return const SizedBox.shrink();
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: activeRequest != null
+                        ? _buildStatusIndicator(context, activeRequest)
+                        : ElevatedButton.icon(
+                            onPressed: () async {
+                              final parent = context.read<AuthBloc>().state.user!;
+                              final request = DismissalRequest(
+                                id: '',
+                                studentId: student.id,
+                                studentName: student.name,
+                                studentGrade: student.grade,
+                                parentId: parent.id,
+                                parentName: parent.name,
+                                status: DismissalStatus.pending,
+                                timestamp: DateTime.now(),
+                              );
+
+                              try {
+                                await context
+                                    .read<DismissalRepository>()
+                                    .requestDismissal(request);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(context)
+                                                ?.requestSentSuccessfully ??
+                                            'تم إرسال طلب الانصراف بنجاح!',
+                                        style: GoogleFonts.notoKufiArabic(),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e')),
+                                  );
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.hail_rounded, size: 18),
+                            label: Text(
+                              AppLocalizations.of(context)?.pickupRequest ??
+                                  'طلب استلام',
+                              style: GoogleFonts.notoKufiArabic(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                          ),
+                  ),
+                ],
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStatusIndicator(BuildContext context, DismissalRequest request) {
+    final color = _getStatusColor(request.status);
+    final label = _getStatusText(context, request.status);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: GoogleFonts.notoKufiArabic(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          if (request.eta != null) ...[
+            const Spacer(),
+            Text(
+              request.eta!,
+              style: GoogleFonts.notoKufiArabic(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(DismissalStatus status) {
+    switch (status) {
+      case DismissalStatus.pending:
+        return Colors.grey;
+      case DismissalStatus.arrivingSoon:
+        return Colors.orange;
+      case DismissalStatus.atGate:
+        return Colors.blue;
+      case DismissalStatus.completed:
+        return Colors.green;
+      case DismissalStatus.cancelled:
+        return Colors.red;
+    }
+  }
+
+  String _getStatusText(BuildContext context, DismissalStatus status) {
+    switch (status) {
+      case DismissalStatus.pending:
+        return AppLocalizations.of(context)?.pending ?? 'Pending';
+      case DismissalStatus.arrivingSoon:
+        return AppLocalizations.of(context)?.arrivingSoon ?? 'Arriving Soon';
+      case DismissalStatus.atGate:
+        return AppLocalizations.of(context)?.atGate ?? 'At Gate';
+      case DismissalStatus.completed:
+        return AppLocalizations.of(context)?.completed ?? 'Completed';
+      case DismissalStatus.cancelled:
+        return AppLocalizations.of(context)?.cancelled ?? 'Cancelled';
+    }
   }
 }
 
@@ -571,6 +706,7 @@ class _StatusBadge extends StatelessWidget {
 
 class _LiveStatusBadge extends StatelessWidget {
   final String studentId;
+
   const _LiveStatusBadge({required this.studentId});
 
   @override
@@ -578,25 +714,28 @@ class _LiveStatusBadge extends StatelessWidget {
     return StreamBuilder<List<AttendanceRecord>>(
       stream: context.read<AttendanceRepository>().getStudentAttendance(studentId),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          debugPrint('Attendance Stream Error: ${snapshot.error}');
+          return Text(
+            'Err: ${snapshot.error}'.replaceAll('[cloud_firestore/permission-denied]', 'Perms'),
+            style: const TextStyle(color: Colors.red, fontSize: 10),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          );
+        }
+
         final records = snapshot.data ?? [];
-        AttendanceStatus? lastStatus;
-        if (records.isNotEmpty) {
-          lastStatus = records.first.status; // already ordered descending
-        }
-
-        String label;
-        Color color;
-
-        if (lastStatus == AttendanceStatus.checkIn) {
-          label = 'في المدرسة';
-          color = Colors.green;
-        } else if (lastStatus == AttendanceStatus.checkOut) {
-          label = 'غادر';
-          color = Colors.blue;
-        } else {
-          label = 'غير محدد';
-          color = Colors.grey;
-        }
+        final childState = records.resolveChildState();
+        final label = _labelForState(context, childState);
+        final color = _colorForState(childState);
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -615,6 +754,36 @@ class _LiveStatusBadge extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _labelForState(BuildContext context, ChildState state) {
+    switch (state) {
+      case ChildState.inSchool:
+        return AppLocalizations.of(context)?.inSchool ?? 'In School';
+      case ChildState.onBus:
+        return AppLocalizations.of(context)?.onBus ?? 'On Bus';
+      case ChildState.leftSchool:
+        return AppLocalizations.of(context)?.leftSchool ?? 'Left';
+      case ChildState.absent:
+        return 'Absent';
+      case ChildState.unknown:
+        return AppLocalizations.of(context)?.notSpecified ?? 'Not Specified';
+    }
+  }
+
+  Color _colorForState(ChildState state) {
+    switch (state) {
+      case ChildState.inSchool:
+        return Colors.green;
+      case ChildState.onBus:
+        return Colors.orange;
+      case ChildState.leftSchool:
+        return Colors.blue;
+      case ChildState.absent:
+        return Colors.orange;
+      case ChildState.unknown:
+        return Colors.grey;
+    }
   }
 }
 
@@ -763,6 +932,7 @@ class _ActionItem extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 label,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.notoKufiArabic(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,

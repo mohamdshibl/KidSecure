@@ -218,17 +218,497 @@ abstract class AppLocalizations {
   /// **'مركز المساعدة'**
   String get helpCenter;
 
+  /// No description provided for @quickActions.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجراءات سريعة'**
+  String get quickActions;
+
+  /// No description provided for @dashboard.
+  ///
+  /// In ar, this message translates to:
+  /// **'لوحة القيادة'**
+  String get dashboard;
+
+  /// No description provided for @adminConsole.
+  ///
+  /// In ar, this message translates to:
+  /// **'لوحة الإدارة'**
+  String get adminConsole;
+
+  /// No description provided for @emergency.
+  ///
+  /// In ar, this message translates to:
+  /// **'طوارئ'**
+  String get emergency;
+
+  /// No description provided for @criticalAlerts.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات حرجة'**
+  String get criticalAlerts;
+
+  /// No description provided for @broadcast.
+  ///
+  /// In ar, this message translates to:
+  /// **'بث'**
+  String get broadcast;
+
+  /// No description provided for @generalUpdates.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديثات عامة'**
+  String get generalUpdates;
+
+  /// No description provided for @stats.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإحصائيات'**
+  String get stats;
+
+  /// No description provided for @viewActivity.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض النشاط'**
+  String get viewActivity;
+
+  /// No description provided for @sentBroadcasts.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرسائل المرسلة'**
+  String get sentBroadcasts;
+
+  /// No description provided for @all.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get all;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم العثور على مستخدمين'**
+  String get noUsersFound;
+
+  /// No description provided for @schoolAdministrator.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدير المدرسة'**
+  String get schoolAdministrator;
+
+  /// No description provided for @addStaff.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة موظف'**
+  String get addStaff;
+
   /// No description provided for @logout.
   ///
   /// In ar, this message translates to:
   /// **'تسجيل الخروج'**
   String get logout;
 
-  /// No description provided for @quickActions.
+  /// No description provided for @pickupRequest.
   ///
   /// In ar, this message translates to:
-  /// **'إجراءات سريعة'**
-  String get quickActions;
+  /// **'طلب استلام'**
+  String get pickupRequest;
+
+  /// No description provided for @requestSentSuccessfully.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال طلب الانصراف بنجاح!'**
+  String get requestSentSuccessfully;
+
+  /// No description provided for @inSchool.
+  ///
+  /// In ar, this message translates to:
+  /// **'في المدرسة'**
+  String get inSchool;
+
+  /// No description provided for @leftSchool.
+  ///
+  /// In ar, this message translates to:
+  /// **'غادر'**
+  String get leftSchool;
+
+  /// No description provided for @onBus.
+  ///
+  /// In ar, this message translates to:
+  /// **'في الحافلة'**
+  String get onBus;
+
+  /// No description provided for @notSpecified.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير محدد'**
+  String get notSpecified;
+
+  /// No description provided for @requests.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطلبات'**
+  String get requests;
+
+  /// No description provided for @dismissalRequests.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلبات الانصراف'**
+  String get dismissalRequests;
+
+  /// No description provided for @liveConnected.
+  ///
+  /// In ar, this message translates to:
+  /// **'متصل مباشر'**
+  String get liveConnected;
+
+  /// No description provided for @searchStudentHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'البحث باسم الطالب أو الرقم التعريفي...'**
+  String get searchStudentHint;
+
+  /// No description provided for @activeRequests.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلبات نشطة'**
+  String get activeRequests;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الكل'**
+  String get viewAll;
+
+  /// No description provided for @errorFetchingData.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ في جلب البيانات'**
+  String get errorFetchingData;
+
+  /// No description provided for @createFirestoreIndex.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إنشاء الفهرس المطلوب في Firestore console.'**
+  String get createFirestoreIndex;
+
+  /// No description provided for @noActiveRequests.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد طلبات نشطة حالياً'**
+  String get noActiveRequests;
+
+  /// No description provided for @parentLocationRadar.
+  ///
+  /// In ar, this message translates to:
+  /// **'موقع أولياء الأمور (المنطقة الجغرافية)'**
+  String get parentLocationRadar;
+
+  /// No description provided for @mainGate.
+  ///
+  /// In ar, this message translates to:
+  /// **'البوابة الرئيسية'**
+  String get mainGate;
+
+  /// No description provided for @autoUpdate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث تلقائي'**
+  String get autoUpdate;
+
+  /// No description provided for @pending.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيد الانتظار'**
+  String get pending;
+
+  /// No description provided for @arrivingSoon.
+  ///
+  /// In ar, this message translates to:
+  /// **'قادم قريباً'**
+  String get arrivingSoon;
+
+  /// No description provided for @atGate.
+  ///
+  /// In ar, this message translates to:
+  /// **'عند البوابة'**
+  String get atGate;
+
+  /// No description provided for @completed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الانصراف'**
+  String get completed;
+
+  /// No description provided for @cancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملغي'**
+  String get cancelled;
+
+  /// No description provided for @authorizedPerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصرح له'**
+  String get authorizedPerson;
+
+  /// No description provided for @confirmDismissal.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد الخروج'**
+  String get confirmDismissal;
+
+  /// No description provided for @requestsHistory.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل الطلبات'**
+  String get requestsHistory;
+
+  /// No description provided for @latestCompletedRequests.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحدث الطلبات المنتهية'**
+  String get latestCompletedRequests;
+
+  /// No description provided for @historyEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'السجل فارغ حالياً'**
+  String get historyEmpty;
+
+  /// No description provided for @quickQrScanner.
+  ///
+  /// In ar, this message translates to:
+  /// **'ماسح الرموز السريع'**
+  String get quickQrScanner;
+
+  /// No description provided for @qrScannerDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'قم بمسح الكود الخاص بالطالب للتحقق الفوري وتسجيل الحضور أو الانصراف.'**
+  String get qrScannerDesc;
+
+  /// No description provided for @startCamera.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل الكاميرا'**
+  String get startCamera;
+
+  /// No description provided for @manualChildSearch.
+  ///
+  /// In ar, this message translates to:
+  /// **'بحث يدوي عن طفل'**
+  String get manualChildSearch;
+
+  /// No description provided for @profileScreen.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملف الشخصي'**
+  String get profileScreen;
+
+  /// No description provided for @gateOfficerRoleLong.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضابط أمن البوابة'**
+  String get gateOfficerRoleLong;
+
+  /// No description provided for @appSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'التطبيق'**
+  String get appSettings;
+
+  /// No description provided for @supportAndHelp.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعم والمساعدة'**
+  String get supportAndHelp;
+
+  /// No description provided for @aboutApp.
+  ///
+  /// In ar, this message translates to:
+  /// **'عن التطبيق'**
+  String get aboutApp;
+
+  /// No description provided for @manualStudentSearch.
+  ///
+  /// In ar, this message translates to:
+  /// **'بحث يدوي عن طالب'**
+  String get manualStudentSearch;
+
+  /// No description provided for @enterStudentName.
+  ///
+  /// In ar, this message translates to:
+  /// **'ادخل اسم الطالب...'**
+  String get enterStudentName;
+
+  /// No description provided for @typeTwoCharsToSearch.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب حرفين على الأقل للبحث'**
+  String get typeTwoCharsToSearch;
+
+  /// No description provided for @noResults.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد نتائج'**
+  String get noResults;
+
+  /// No description provided for @checkIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'حضور'**
+  String get checkIn;
+
+  /// No description provided for @checkOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'انصراف'**
+  String get checkOut;
+
+  /// No description provided for @close.
+  ///
+  /// In ar, this message translates to:
+  /// **'إغلاق'**
+  String get close;
+
+  /// No description provided for @attendanceCheckInSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل الحضور لـ {name}'**
+  String attendanceCheckInSuccess(Object name);
+
+  /// No description provided for @attendanceCheckOutSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل الانصراف لـ {name}'**
+  String attendanceCheckOutSuccess(Object name);
+
+  /// No description provided for @arabic.
+  ///
+  /// In ar, this message translates to:
+  /// **'العربية'**
+  String get arabic;
+
+  /// No description provided for @english.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإنجليزية'**
+  String get english;
+
+  /// No description provided for @scanner.
+  ///
+  /// In ar, this message translates to:
+  /// **'ماسح'**
+  String get scanner;
+
+  /// No description provided for @languageSetting.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللغة'**
+  String get languageSetting;
+
+  /// No description provided for @busDriverDashboard.
+  ///
+  /// In ar, this message translates to:
+  /// **'لوحة سائق الحافلة'**
+  String get busDriverDashboard;
+
+  /// No description provided for @studentManifest.
+  ///
+  /// In ar, this message translates to:
+  /// **'قائمة الطلاب'**
+  String get studentManifest;
+
+  /// No description provided for @noStudentsAssigned.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد طلاب مسجلين لهذه الحافلة.'**
+  String get noStudentsAssigned;
+
+  /// No description provided for @busIdLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الحافلة: {id}'**
+  String busIdLabel(String id);
+
+  /// No description provided for @liveTrackingEnabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتبع الموقع مفعل'**
+  String get liveTrackingEnabled;
+
+  /// No description provided for @liveStudentList.
+  ///
+  /// In ar, this message translates to:
+  /// **'قائمة الطلاب المباشرة'**
+  String get liveStudentList;
+
+  /// No description provided for @pickup.
+  ///
+  /// In ar, this message translates to:
+  /// **'ركوب'**
+  String get pickup;
+
+  /// No description provided for @dropoff.
+  ///
+  /// In ar, this message translates to:
+  /// **'نزول'**
+  String get dropoff;
+
+  /// No description provided for @notifyNearArrival.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيه اقتراب'**
+  String get notifyNearArrival;
+
+  /// No description provided for @arrivalNotificationSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال تنبيه الاقتراب'**
+  String get arrivalNotificationSent;
+
+  /// No description provided for @busUpdate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث الحافلة'**
+  String get busUpdate;
+
+  /// No description provided for @onBusNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} ركب الحافلة الآن'**
+  String onBusNow(String name);
+
+  /// No description provided for @offBusNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} نزل من الحافلة الآن'**
+  String offBusNow(String name);
+
+  /// No description provided for @pickedUpSuccessfully.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل الركوب بنجاح'**
+  String get pickedUpSuccessfully;
+
+  /// No description provided for @droppedOffSuccessfully.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل النزول بنجاح'**
+  String get droppedOffSuccessfully;
+
+  /// No description provided for @busArrivalAlert.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيه اقتراب الحافلة'**
+  String get busArrivalAlert;
+
+  /// No description provided for @busApproachingBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافلة {name} تقترب، ستصل خلال دقيقة تقريباً.'**
+  String busApproachingBody(String name);
 }
 
 class _AppLocalizationsDelegate

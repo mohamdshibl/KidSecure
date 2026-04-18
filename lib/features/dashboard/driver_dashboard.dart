@@ -14,6 +14,7 @@ import '../notifications/domain/repositories/notification_repository.dart';
 import '../bus_tracking/presentation/cubit/driver_location_cubit.dart';
 import '../../core/services/fcm_v1_service.dart';
 import 'package:uuid/uuid.dart';
+import '../../l10n/app_localizations.dart';
 
 class DriverDashboard extends StatefulWidget {
   const DriverDashboard({super.key});
@@ -116,7 +117,7 @@ class _HomeView extends StatelessWidget {
       children: [
         AppBar(
           title: Text(
-            'Bus Driver',
+            AppLocalizations.of(context)?.busDriverDashboard ?? 'Bus Driver',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           ),
           elevation: 0,
@@ -132,7 +133,8 @@ class _HomeView extends StatelessWidget {
               const BroadcastBanner(),
               const SizedBox(height: 16),
               Text(
-                'Student Manifest',
+                AppLocalizations.of(context)?.studentManifest ??
+                    'Student Manifest',
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -157,7 +159,8 @@ class _HomeView extends StatelessWidget {
               if (students.isEmpty) {
                 return Center(
                   child: Text(
-                    'No students assigned to this bus.',
+                    AppLocalizations.of(context)?.noStudentsAssigned ??
+                        'No students assigned to this bus.',
                     style: GoogleFonts.inter(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -219,7 +222,8 @@ class _HomeView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bus ID: $busId',
+                  AppLocalizations.of(context)?.busIdLabel(busId) ??
+                      'Bus ID: $busId',
                   style: GoogleFonts.outfit(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -228,7 +232,11 @@ class _HomeView extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  isLive ? 'Live Tracking Enabled' : 'Live Student List',
+                  isLive
+                      ? (AppLocalizations.of(context)?.liveTrackingEnabled ??
+                            'Live Tracking Enabled')
+                      : (AppLocalizations.of(context)?.liveStudentList ??
+                            'Live Student List'),
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.8),
@@ -305,27 +313,35 @@ class _QuickAttendanceButtons extends StatelessWidget {
             Icons.notifications_active_rounded,
             color: Colors.orange,
           ),
-          tooltip: 'Notify Near Arrival',
+          tooltip:
+              AppLocalizations.of(context)?.notifyNearArrival ??
+              'Notify Near Arrival',
         ),
         IconButton(
           onPressed: () => _record(context, AttendanceStatus.checkIn),
           icon: const Icon(Icons.login_rounded, color: Colors.green),
-          tooltip: 'Pick-up',
+          tooltip: AppLocalizations.of(context)?.pickup ?? 'Pick-up',
         ),
         IconButton(
           onPressed: () => _record(context, AttendanceStatus.checkOut),
           icon: const Icon(Icons.logout_rounded, color: Colors.blue),
-          tooltip: 'Drop-off',
+          tooltip: AppLocalizations.of(context)?.dropoff ?? 'Drop-off',
         ),
       ],
     );
   }
 
   void _notifyArrival(BuildContext context) {
+    final title =
+        AppLocalizations.of(context)?.busArrivalAlert ?? 'تنبيه اقتراب الحافلة';
+    final body =
+        AppLocalizations.of(context)?.busApproachingBody(student.name) ??
+        'حافلة ${student.name} تقترب، ستصل خلال دقيقة تقريباً.';
+
     final notification = AppNotification(
       id: const Uuid().v4(),
-      title: 'تنبيه اقتراب الحافلة',
-      body: 'حافلة ${student.name} تقترب، ستصل خلال دقيقة تقريباً.',
+      title: title,
+      body: body,
       timestamp: DateTime.now(),
       isRead: false,
       type: NotificationType.bus,
@@ -336,18 +352,20 @@ class _QuickAttendanceButtons extends StatelessWidget {
     try {
       context.read<NotificationRepository>().sendNotification(notification);
 
-      // Also send a real FCM push to the parent's device.
       context.read<FcmV1Service>().sendToParent(
         parentId: student.parentId,
-        title: notification.title,
-        body: notification.body,
+        title: title,
+        body: body,
         data: {'type': 'bus', 'studentId': student.id},
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Arrival notification sent'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.arrivalNotificationSent ??
+                'Arrival notification sent',
+          ),
+          duration: const Duration(seconds: 1),
         ),
       );
     } catch (e) {
@@ -375,12 +393,18 @@ class _QuickAttendanceButtons extends StatelessWidget {
 
       if (context.mounted) {
         // Send notification to parent
+        final title =
+            AppLocalizations.of(context)?.busUpdate ?? 'تحديث الحافلة';
+        final body = status == AttendanceStatus.checkIn
+            ? (AppLocalizations.of(context)?.onBusNow(student.name) ??
+                  'ركب ${student.name} الحافلة الآن')
+            : (AppLocalizations.of(context)?.offBusNow(student.name) ??
+                  'نزل ${student.name} من الحافلة الآن');
+
         final notification = AppNotification(
           id: const Uuid().v4(),
-          title: 'تحديث الحافلة',
-          body: status == AttendanceStatus.checkIn
-              ? 'ركب ${student.name} الحافلة الآن'
-              : 'نزل ${student.name} من الحافلة الآن',
+          title: title,
+          body: body,
           timestamp: DateTime.now(),
           isRead: false,
           type: NotificationType.bus,
@@ -390,13 +414,14 @@ class _QuickAttendanceButtons extends StatelessWidget {
 
         context.read<NotificationRepository>().sendNotification(notification);
 
-        // Also send a real FCM push to the parent's device.
         context.read<FcmV1Service>().sendToParent(
           parentId: student.parentId,
-          title: notification.title,
-          body: notification.body,
+          title: title,
+          body: body,
           data: {
-            'type': status == AttendanceStatus.checkIn ? 'check_in' : 'check_out',
+            'type': status == AttendanceStatus.checkIn
+                ? 'check_in'
+                : 'check_out',
             'studentId': student.id,
           },
         );
@@ -404,7 +429,11 @@ class _QuickAttendanceButtons extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${status == AttendanceStatus.checkIn ? 'Picked up' : 'Dropped off'} successfully',
+              status == AttendanceStatus.checkIn
+                  ? (AppLocalizations.of(context)?.pickedUpSuccessfully ??
+                        'Picked up successfully')
+                  : (AppLocalizations.of(context)?.droppedOffSuccessfully ??
+                        'Dropped off successfully'),
             ),
             duration: const Duration(seconds: 1),
           ),
@@ -561,7 +590,8 @@ class _ProfileView extends StatelessWidget {
               label: 'اللغة / Language',
               trailing: Switch(
                 value: locale.languageCode == 'en',
-                onChanged: (_) => context.read<LanguageCubit>().toggleLanguage(),
+                onChanged: (_) =>
+                    context.read<LanguageCubit>().toggleLanguage(),
                 activeColor: Theme.of(context).primaryColor,
               ),
             );
