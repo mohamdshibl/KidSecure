@@ -757,6 +757,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم المسح بنجاح: {status}'**
   String scanSuccess(Object status);
+
+  /// No description provided for @startTripStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'حالة الرحلة'**
+  String get startTripStatus;
+
+  /// No description provided for @tripInProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرحلة قيد التنفيذ'**
+  String get tripInProgress;
+
+  /// No description provided for @inactive.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير نشط'**
+  String get inactive;
+
+  /// No description provided for @scan.
+  ///
+  /// In ar, this message translates to:
+  /// **'المسح'**
+  String get scan;
 }
 
 class _AppLocalizationsDelegate

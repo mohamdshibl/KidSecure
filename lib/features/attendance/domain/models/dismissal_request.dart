@@ -11,6 +11,7 @@ class DismissalRequest {
   final String parentName;
   final String? driverId;
   final String? driverName;
+  final String? busId;
   final DismissalStatus status;
   final DateTime timestamp;
   final String? eta; // Estimated Time of Arrival, e.g. "2 min"
@@ -27,6 +28,7 @@ class DismissalRequest {
     required this.status,
     required this.timestamp,
     this.eta,
+    this.busId,
   });
 
   Map<String, dynamic> toMap() {
@@ -41,6 +43,7 @@ class DismissalRequest {
       'status': status.toString().split('.').last,
       'timestamp': FieldValue.serverTimestamp(),
       'eta': eta,
+      'busId': busId,
     };
   }
 
@@ -60,6 +63,7 @@ class DismissalRequest {
       ),
       timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       eta: map['eta'],
+      busId: map['busId'],
     );
   }
 }

@@ -5,7 +5,7 @@ abstract class AttendanceRepository {
   Future<void> recordAttendance(AttendanceRecord record);
   Stream<List<AttendanceRecord>> getStudentAttendance(String studentId);
   Stream<List<StudentModel>> getStudentsByParent(String parentId);
-  Future<StudentModel?> getStudentByQrCode(String qrCode);
+  Future<StudentModel?> getStudentByQrCode(String qrCode, {String? busId});
   Future<void> addStudent(StudentModel student);
   Future<void> updateStudent(StudentModel student);
   Future<void> deleteStudent(String studentId);

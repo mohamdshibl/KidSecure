@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../../domain/models/attendance_record.dart';
 import '../../domain/models/dismissal_request.dart';
 import '../../domain/repositories/dismissal_repository.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/domain/user_model.dart';
 import 'package:kidsecure/l10n/app_localizations.dart';
 
 class QrScannerPage extends StatefulWidget {
@@ -40,6 +42,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
               final List<Barcode> barcodes = capture.barcodes;
               for (final barcode in barcodes) {
                 if (barcode.rawValue != null) {
+                  HapticFeedback.lightImpact(); // Feedback on detect
                   setState(() => _isProcessing = true);
                   await _handleScan(barcode.rawValue!);
                   break;
@@ -92,9 +95,11 @@ class _QrScannerPageState extends State<QrScannerPage> {
 
   Future<void> _handleScan(String qrCode) async {
     final repository = context.read<AttendanceRepository>();
+    final user = context.read<AuthBloc>().state.user;
+    final busId = user?.role == UserRole.driver ? user?.busId : null;
 
     try {
-      final student = await repository.getStudentByQrCode(qrCode);
+      final student = await repository.getStudentByQrCode(qrCode, busId: busId);
 
       if (!mounted) return;
 
@@ -116,8 +121,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
       if (mounted) {
         _showResult(
           context,
-          AppLocalizations.of(context)?.errorProcessingScan ??
-              'Error processing scan',
+          '${AppLocalizations.of(context)?.errorProcessingScan ?? 'Error processing scan'}: $e',
           Colors.red,
         );
       }
@@ -291,12 +295,15 @@ class _QrScannerPageState extends State<QrScannerPage> {
     
     try {
       // 1. Record checkout
+      final user = context.read<AuthBloc>().state.user;
       final record = AttendanceRecord(
         id: '',
         studentId: request.studentId,
         timestamp: DateTime.now(),
         status: AttendanceStatus.checkOut,
         location: 'Scan Confirmation',
+        busId: user?.role == UserRole.driver ? user?.busId : null,
+        officerId: user?.id,
       );
       await attendanceRepo.recordAttendance(record);
 
@@ -318,15 +325,19 @@ class _QrScannerPageState extends State<QrScannerPage> {
   ) async {
     Navigator.pop(context); // Close bottom sheet
 
+    final user = context.read<AuthBloc>().state.user;
     final record = AttendanceRecord(
       id: '', // Firestore auto-id
       studentId: studentId,
       timestamp: DateTime.now(),
       status: status,
+      busId: user?.role == UserRole.driver ? user?.busId : null,
+      officerId: user?.id,
     );
 
     await context.read<AttendanceRepository>().recordAttendance(record);
     if (context.mounted) {
+      HapticFeedback.heavyImpact(); // Stronger feedback on success
       _showResult(
         context,
         AppLocalizations.of(context)?.scanSuccess(status.toString().split('.').last) ??

@@ -7,7 +7,6 @@ import '../attendance/domain/repositories/attendance_repository.dart';
 import '../auth/presentation/bloc/auth_bloc.dart';
 import '../auth/presentation/bloc/auth_event.dart';
 import '../../core/theme/theme_cubit.dart';
-import '../../core/theme/theme_cubit.dart';
 import '../../core/localization/language_cubit.dart';
 import '../../l10n/app_localizations.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
@@ -19,6 +18,7 @@ import '../notifications/presentation/pages/notifications_history_page.dart';
 import '../tracking/presentation/pages/bus_tracking_page.dart';
 import '../notifications/domain/models/notification_model.dart';
 import '../notifications/domain/repositories/notification_repository.dart';
+import '../../core/services/fcm_v1_service.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -539,6 +539,13 @@ class _DismissalActions extends StatelessWidget {
                         : ElevatedButton.icon(
                             onPressed: () async {
                               final parent = context.read<AuthBloc>().state.user!;
+                              
+                              // Logic to determine if child is on bus and which bus
+                              final attendanceRecords = attendanceSnapshot.data ?? [];
+                              final sortedRecords = attendanceRecords.toList()..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                              final latestRecord = sortedRecords.isNotEmpty ? sortedRecords.first : null;
+                              final busId = childState == ChildState.onBus ? latestRecord?.busId : null;
+
                               final request = DismissalRequest(
                                 id: '',
                                 studentId: student.id,
@@ -546,6 +553,7 @@ class _DismissalActions extends StatelessWidget {
                                 studentGrade: student.grade,
                                 parentId: parent.id,
                                 parentName: parent.name,
+                                busId: busId, // Route to bus if on board
                                 status: DismissalStatus.pending,
                                 timestamp: DateTime.now(),
                               );
@@ -554,6 +562,23 @@ class _DismissalActions extends StatelessWidget {
                                 await context
                                     .read<DismissalRepository>()
                                     .requestDismissal(request);
+                                
+                                // Send push notification to routing target
+                                if (context.mounted) {
+                                  final fcmService = context.read<FcmV1Service>();
+                                  if (busId != null) {
+                                    await fcmService.sendToBus(
+                                      busId: busId,
+                                      title: 'Pickup Request',
+                                      body: 'Parent of ${student.name} is waiting at the stop.',
+                                      data: {'type': 'pickup', 'studentId': student.id},
+                                    );
+                                  } else {
+                                    // Optionally send to gate tokens if you have them, 
+                                    // but usually Gate Officers listen to the live stream.
+                                  }
+                                }
+
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -679,30 +704,6 @@ class _DismissalActions extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Text(
-        status,
-        style: GoogleFonts.notoKufiArabic(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.green,
-        ),
-      ),
-    );
-  }
-}
 
 class _LiveStatusBadge extends StatelessWidget {
   final String studentId;

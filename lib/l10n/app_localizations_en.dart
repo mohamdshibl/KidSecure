@@ -355,4 +355,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String scanSuccess(Object status) {
     return 'Scan Success: $status';
   }
+
+  @override
+  String get startTripStatus => 'Trip Status';
+
+  @override
+  String get tripInProgress => 'Trip in Progress';
+
+  @override
+  String get inactive => 'Inactive';
+
+  @override
+  String get scan => 'Scan';
 }

@@ -152,4 +152,26 @@ YOUR_PRIVATE_KEY_HERE
       await sendToToken(fcmToken: token, title: title, body: body, data: data);
     } catch (e) {}
   }
+
+  Future<void> sendToBus({
+    required String busId,
+    required String title,
+    required String body,
+    Map<String, String>? data,
+  }) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'driver')
+          .where('busId', isEqualTo: busId)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        final token = doc.data()['fcmToken'] as String?;
+        if (token != null && token.isNotEmpty) {
+          await sendToToken(fcmToken: token, title: title, body: body, data: data);
+        }
+      }
+    } catch (e) {}
+  }
 }

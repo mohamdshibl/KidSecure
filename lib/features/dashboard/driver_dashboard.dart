@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../attendance/domain/models/student_model.dart';
+import '../attendance/domain/models/child_state.dart';
 import '../attendance/domain/models/attendance_record.dart';
 import '../attendance/domain/repositories/attendance_repository.dart';
 import '../auth/presentation/bloc/auth_bloc.dart';
@@ -12,9 +14,12 @@ import '../admin/presentation/widgets/broadcast_banner.dart';
 import '../notifications/domain/models/notification_model.dart';
 import '../notifications/domain/repositories/notification_repository.dart';
 import '../bus_tracking/presentation/cubit/driver_location_cubit.dart';
+import '../attendance/domain/repositories/dismissal_repository.dart';
+import '../attendance/domain/models/dismissal_request.dart';
 import '../../core/services/fcm_v1_service.dart';
 import 'package:uuid/uuid.dart';
 import '../../l10n/app_localizations.dart';
+import '../attendance/presentation/pages/qr_scanner_page.dart';
 
 class DriverDashboard extends StatefulWidget {
   const DriverDashboard({super.key});
@@ -27,41 +32,110 @@ class _DriverDashboardState extends State<DriverDashboard> {
   int _selectedIndex = 0;
   bool _isSharingLocation = false;
 
+  Future<void> _toggleLocationSharing(bool val) async {
+    final user = context.read<AuthBloc>().state.user!;
+    final busId = user.busId ?? 'NOT_ASSIGNED';
+    
+    try {
+      final locationCubit = context.read<DriverLocationCubit>();
+      if (val) {
+        await locationCubit.startTrip(busId, user.id);
+      } else {
+        await locationCubit.endTrip();
+      }
+      if (mounted) setState(() => _isSharingLocation = val);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.read<AuthBloc>().state.user!;
     final busId = user.busId ?? 'NOT_ASSIGNED';
 
+    Widget body;
+    switch (_selectedIndex) {
+      case 0:
+        body = _HomeView(busId: busId, isSharingLocation: _isSharingLocation);
+        break;
+      case 1:
+        body = const QrScannerPage();
+        break;
+      case 2:
+        body = _ProfileView(
+          isSharingLocation: _isSharingLocation,
+          onSharingLocationChanged: _toggleLocationSharing,
+        );
+        break;
+      default:
+        body = _HomeView(busId: busId, isSharingLocation: _isSharingLocation);
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: IndexedStack(
-          index: _selectedIndex,
+      appBar: _selectedIndex == 1 
+          ? AppBar(
+            title: Text(AppLocalizations.of(context)?.scan ?? 'Scan'),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+          ) 
+          : null,
+      drawer: _selectedIndex == 0 ? Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            _HomeView(busId: busId, isSharingLocation: _isSharingLocation),
-            _ProfileView(
-              isSharingLocation: _isSharingLocation,
-              onSharingLocationChanged: (val) async {
-                final locationCubit = context.read<DriverLocationCubit>();
-                try {
-                  if (val) {
-                    await locationCubit.startTrip(busId, user.id);
-                  } else {
-                    await locationCubit.endTrip();
-                  }
-                  setState(() => _isSharingLocation = val);
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString()}')),
-                    );
-                  }
-                }
-              },
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 30),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    user.name,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                  Text(
+                    user.email,
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              title: Text(AppLocalizations.of(context)?.settings ?? 'Settings'),
+            ),
+            SwitchListTile(
+              secondary: Icon(
+                _isSharingLocation ? Icons.location_on : Icons.location_off,
+                color: _isSharingLocation ? Colors.green : Colors.grey,
+              ),
+              title: Text(
+                AppLocalizations.of(context)?.startTripStatus ?? 'Trip Status',
+              ),
+              subtitle: Text(
+                _isSharingLocation 
+                  ? (AppLocalizations.of(context)?.tripInProgress ?? 'Trip in Progress')
+                  : (AppLocalizations.of(context)?.inactive ?? 'Inactive'),
+              ),
+              value: _isSharingLocation,
+              onChanged: _toggleLocationSharing,
             ),
           ],
         ),
-      ),
+      ) : null,
+      body: body,
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -89,14 +163,18 @@ class _DriverDashboardState extends State<DriverDashboard> {
         ),
         unselectedLabelStyle: GoogleFonts.outfit(fontSize: 12),
         elevation: 0,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_rounded),
+            label: AppLocalizations.of(context)?.dashboard ?? 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            label: AppLocalizations.of(context)?.scan ?? 'Scan',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_rounded),
+            label: AppLocalizations.of(context)?.profile ?? 'Profile',
           ),
         ],
       ),
@@ -130,6 +208,8 @@ class _HomeView extends StatelessWidget {
             children: [
               _buildBusInfo(context, busId, isSharingLocation),
               const SizedBox(height: 24),
+              _buildDismissalRequests(context),
+              const SizedBox(height: 16),
               const BroadcastBanner(),
               const SizedBox(height: 16),
               Text(
@@ -179,6 +259,117 @@ class _HomeView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDismissalRequests(BuildContext context) {
+    return StreamBuilder<List<DismissalRequest>>(
+      stream: context.read<DismissalRepository>().getRequestsByBus(busId),
+      builder: (context, snapshot) {
+        final requests = snapshot.data ?? [];
+        if (requests.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.hail_rounded, color: Colors.orange, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  AppLocalizations.of(context)?.pickupRequest ?? 'طلبات استلام',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${requests.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 120, // Increased height to prevent overflow
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: requests.length,
+                itemBuilder: (context, index) {
+                  final request = requests[index];
+                  return Container(
+                    width: 200,
+                    margin: const EdgeInsets.only(right: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          request.studentName,
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Waiting at stop',
+                          style: GoogleFonts.inter(fontSize: 12, color: Colors.orange.shade900),
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                context.read<DismissalRepository>().updateDismissalStatus(
+                                  request.id,
+                                  DismissalStatus.completed,
+                                );
+                                
+                                // ALSO record check-out to update ChildState to "Left"
+                                context.read<AttendanceRepository>().recordAttendance(
+                                  AttendanceRecord(
+                                    id: const Uuid().v4(),
+                                    studentId: request.studentId,
+                                    status: AttendanceStatus.checkOut,
+                                    timestamp: DateTime.now(),
+                                    officerId: context.read<AuthBloc>().state.user!.id,
+                                    location: 'Bus Drop-off',
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                foregroundColor: Colors.orange.shade900,
+                              ),
+                              child: const Text('Confirm'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const Divider(height: 32),
+          ],
+        );
+      },
     );
   }
 
@@ -251,48 +442,158 @@ class _HomeView extends StatelessWidget {
   }
 }
 
-class _StudentManifestItem extends StatelessWidget {
+class _StudentManifestItem extends StatefulWidget {
   final StudentModel student;
 
-  const _StudentManifestItem({required this.student});
+  const _StudentManifestItem({required this.student, super.key});
+
+  @override
+  State<_StudentManifestItem> createState() => _StudentManifestItemState();
+}
+
+class _StudentManifestItemState extends State<_StudentManifestItem> {
+  late Stream<List<AttendanceRecord>> _attendanceStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _attendanceStream = context.read<AttendanceRepository>().getStudentAttendance(widget.student.id);
+  }
+
+  @override
+  void didUpdateWidget(_StudentManifestItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.student.id != widget.student.id) {
+      _attendanceStream = context.read<AttendanceRepository>().getStudentAttendance(widget.student.id);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            child: Icon(Icons.person, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  student.name,
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  student.grade,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+    return StreamBuilder<List<AttendanceRecord>>(
+      stream: _attendanceStream,
+      builder: (context, snapshot) {
+        final records = snapshot.data ?? [];
+        final state = records.resolveChildState();
+        final isOnBus = state == ChildState.onBus;
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isOnBus 
+                ? Colors.green.withOpacity(0.05) 
+                : Theme.of(context).cardTheme.color,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isOnBus 
+                  ? Colors.green.withOpacity(0.2) 
+                  : Theme.of(context).dividerColor
             ),
           ),
-          _QuickAttendanceButtons(student: student),
-        ],
+          child: Row(
+            children: [
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    child: Icon(
+                      isOnBus ? Icons.check_circle_rounded : Icons.person,
+                      color: isOnBus ? Colors.green : Colors.blue.shade100,
+                    ),
+                  ),
+                  if (!isOnBus)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.student.name,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        color: isOnBus ? Colors.green.shade800 : null,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          widget.student.grade,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatusBadge(context, state),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              _QuickAttendanceButtons(student: widget.student, isOnBus: isOnBus),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context, ChildState state) {
+    Color color;
+    String label;
+    
+    switch (state) {
+      case ChildState.inSchool:
+        color = Colors.blue;
+        label = AppLocalizations.of(context)?.inSchool ?? 'In School';
+        break;
+      case ChildState.onBus:
+        color = Colors.green;
+        label = AppLocalizations.of(context)?.onBus ?? 'On Bus';
+        break;
+      case ChildState.leftSchool:
+        color = Colors.grey;
+        label = AppLocalizations.of(context)?.leftSchool ?? 'Left';
+        break;
+      case ChildState.absent:
+        color = Colors.orange;
+        label = 'Absent';
+        break;
+      case ChildState.unknown:
+        color = Colors.grey;
+        label = AppLocalizations.of(context)?.notSpecified ?? 'Not Specified';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
       ),
     );
   }
@@ -300,15 +601,22 @@ class _StudentManifestItem extends StatelessWidget {
 
 class _QuickAttendanceButtons extends StatelessWidget {
   final StudentModel student;
+  final bool isOnBus;
 
-  const _QuickAttendanceButtons({required this.student});
+  const _QuickAttendanceButtons({
+    required this.student, 
+    required this.isOnBus
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         IconButton(
-          onPressed: () => _notifyArrival(context),
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            _notifyArrival(context);
+          },
           icon: const Icon(
             Icons.notifications_active_rounded,
             color: Colors.orange,
@@ -317,16 +625,24 @@ class _QuickAttendanceButtons extends StatelessWidget {
               AppLocalizations.of(context)?.notifyNearArrival ??
               'Notify Near Arrival',
         ),
-        IconButton(
-          onPressed: () => _record(context, AttendanceStatus.checkIn),
-          icon: const Icon(Icons.login_rounded, color: Colors.green),
-          tooltip: AppLocalizations.of(context)?.pickup ?? 'Pick-up',
-        ),
-        IconButton(
-          onPressed: () => _record(context, AttendanceStatus.checkOut),
-          icon: const Icon(Icons.logout_rounded, color: Colors.blue),
-          tooltip: AppLocalizations.of(context)?.dropoff ?? 'Drop-off',
-        ),
+        if (!isOnBus)
+          IconButton(
+            onPressed: () {
+              HapticFeedback.heavyImpact();
+              _record(context, AttendanceStatus.checkIn);
+            },
+            icon: const Icon(Icons.login_rounded, color: Colors.green),
+            tooltip: AppLocalizations.of(context)?.pickup ?? 'Pick-up',
+          )
+        else
+          IconButton(
+            onPressed: () {
+              HapticFeedback.heavyImpact();
+              _record(context, AttendanceStatus.checkOut);
+            },
+            icon: const Icon(Icons.logout_rounded, color: Colors.blue),
+            tooltip: AppLocalizations.of(context)?.dropoff ?? 'Drop-off',
+          ),
       ],
     );
   }
@@ -470,7 +786,7 @@ class _ProfileView extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
           title: Text(
-            'Profile',
+            AppLocalizations.of(context)?.profile ?? 'Profile',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 20,
@@ -535,7 +851,7 @@ class _ProfileView extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Bus Driver',
+                  AppLocalizations.of(context)?.driver ?? 'Bus Driver',
                   style: GoogleFonts.inter(
                     color: Colors.white.withOpacity(0.8),
                     fontSize: 12,
@@ -554,7 +870,7 @@ class _ProfileView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Settings',
+          AppLocalizations.of(context)?.settings ?? 'Settings',
           style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
@@ -564,7 +880,7 @@ class _ProfileView extends StatelessWidget {
               icon: mode == ThemeMode.dark
                   ? Icons.light_mode_rounded
                   : Icons.dark_mode_rounded,
-              label: 'Dark Mode',
+              label: AppLocalizations.of(context)?.darkMode ?? 'Dark Mode',
               trailing: Switch(
                 value: mode == ThemeMode.dark,
                 onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
@@ -576,7 +892,7 @@ class _ProfileView extends StatelessWidget {
           icon: isSharingLocation
               ? Icons.location_on_rounded
               : Icons.location_off_rounded,
-          label: 'Location Sharing',
+          label: AppLocalizations.of(context)?.startTripStatus ?? 'Location Sharing',
           trailing: Switch(
             value: isSharingLocation,
             onChanged: onSharingLocationChanged,
@@ -587,7 +903,7 @@ class _ProfileView extends StatelessWidget {
           builder: (context, locale) {
             return _SettingsTile(
               icon: Icons.language_rounded,
-              label: 'اللغة / Language',
+              label: AppLocalizations.of(context)?.language ?? 'Language',
               trailing: Switch(
                 value: locale.languageCode == 'en',
                 onChanged: (_) =>
@@ -607,7 +923,7 @@ class _ProfileView extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
         icon: const Icon(Icons.logout_rounded),
-        label: const Text('Logout'),
+        label: Text(AppLocalizations.of(context)?.logout ?? 'Logout'),
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.error.withOpacity(0.1),
           foregroundColor: Theme.of(context).colorScheme.error,

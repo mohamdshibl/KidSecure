@@ -142,5 +142,9 @@
     "placeholders": {
       "status": { "type": "Object" }
     }
-  }
+  },
+  "startTripStatus": "Trip Status",
+  "tripInProgress": "Trip in Progress",
+  "inactive": "Inactive",
+  "scan": "Scan"
 }

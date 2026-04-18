@@ -32,7 +32,8 @@ service cloud.firestore {
     match /attendance/{logId} {
       // Parents see attendance for their kids
       allow read: if hasRole('admin') || hasRole('gateOfficer') || 
-                  (hasRole('parent') && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.parentId == request.auth.uid);
+                  (hasRole('parent') && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.parentId == request.auth.uid) ||
+                  (hasRole('driver') && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.busId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.busId);
       
       // Drivers and Gate Officers create logs
       allow create: if hasRole('driver') || hasRole('admin') || hasRole('gateOfficer');

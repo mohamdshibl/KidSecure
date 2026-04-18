@@ -6,4 +6,5 @@ abstract class DismissalRepository {
   Stream<List<DismissalRequest>> getActiveRequests();
   Stream<List<DismissalRequest>> getRequestsHistory();
   Stream<DismissalRequest?> getActiveRequestForStudent(String studentId, String parentId);
+  Stream<List<DismissalRequest>> getRequestsByBus(String busId);
 }

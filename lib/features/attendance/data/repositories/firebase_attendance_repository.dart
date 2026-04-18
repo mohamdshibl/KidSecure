@@ -44,12 +44,14 @@ class FirebaseAttendanceRepository implements AttendanceRepository {
   }
 
   @override
-  Future<StudentModel?> getStudentByQrCode(String qrCode) async {
-    final query = await _firestore
-        .collection('students')
-        .where('qrCode', isEqualTo: qrCode)
-        .limit(1)
-        .get();
+  Future<StudentModel?> getStudentByQrCode(String qrCode, {String? busId}) async {
+    var queryRef = _firestore.collection('students').where('qrCode', isEqualTo: qrCode);
+
+    if (busId != null) {
+      queryRef = queryRef.where('busId', isEqualTo: busId);
+    }
+
+    final query = await queryRef.limit(1).get();
 
     if (query.docs.isEmpty) return null;
     return StudentModel.fromMap(query.docs.first.data(), query.docs.first.id);

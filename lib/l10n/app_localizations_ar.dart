@@ -355,4 +355,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String scanSuccess(Object status) {
     return 'تم المسح بنجاح: $status';
   }
+
+  @override
+  String get startTripStatus => 'حالة الرحلة';
+
+  @override
+  String get tripInProgress => 'الرحلة قيد التنفيذ';
+
+  @override
+  String get inactive => 'غير نشط';
+
+  @override
+  String get scan => 'المسح';
 }

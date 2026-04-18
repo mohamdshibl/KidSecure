@@ -142,5 +142,9 @@
     "placeholders": {
       "status": { "type": "Object" }
     }
-  }
+  },
+  "startTripStatus": "حالة الرحلة",
+  "tripInProgress": "الرحلة قيد التنفيذ",
+  "inactive": "غير نشط",
+  "scan": "المسح"
 }
