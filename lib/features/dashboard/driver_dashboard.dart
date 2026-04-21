@@ -479,7 +479,7 @@ class _StudentManifestItemState extends State<_StudentManifestItem> {
         
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
           decoration: BoxDecoration(
             color: isOnBus 
                 ? Colors.green.withOpacity(0.05) 
@@ -496,11 +496,12 @@ class _StudentManifestItemState extends State<_StudentManifestItem> {
               Stack(
                 children: [
                   CircleAvatar(
-                    radius: 24,
+                    radius: 20,
                     backgroundColor: Theme.of(context).colorScheme.surface,
                     child: Icon(
                       isOnBus ? Icons.check_circle_rounded : Icons.person,
                       color: isOnBus ? Colors.green : Colors.blue.shade100,
+                      size: 20,
                     ),
                   ),
                   if (!isOnBus)
@@ -518,7 +519,7 @@ class _StudentManifestItemState extends State<_StudentManifestItem> {
                     ),
                 ],
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -611,12 +612,17 @@ class _QuickAttendanceButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
           onPressed: () {
             HapticFeedback.mediumImpact();
             _notifyArrival(context);
           },
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          iconSize: 22,
           icon: const Icon(
             Icons.notifications_active_rounded,
             color: Colors.orange,
@@ -625,21 +631,44 @@ class _QuickAttendanceButtons extends StatelessWidget {
               AppLocalizations.of(context)?.notifyNearArrival ??
               'Notify Near Arrival',
         ),
-        if (!isOnBus)
+        const SizedBox(width: 4),
+        if (!isOnBus) ...[
           IconButton(
             onPressed: () {
               HapticFeedback.heavyImpact();
               _record(context, AttendanceStatus.checkIn);
             },
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            iconSize: 22,
             icon: const Icon(Icons.login_rounded, color: Colors.green),
             tooltip: AppLocalizations.of(context)?.pickup ?? 'Pick-up',
-          )
-        else
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: () {
+              HapticFeedback.vibrate();
+              _record(context, AttendanceStatus.checkOut);
+            },
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            iconSize: 22,
+            icon: const Icon(Icons.logout_rounded, color: Colors.orange),
+            tooltip: 'Leave from Bus',
+          ),
+        ],
+        if (isOnBus)
           IconButton(
             onPressed: () {
               HapticFeedback.heavyImpact();
               _record(context, AttendanceStatus.checkOut);
             },
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            iconSize: 22,
             icon: const Icon(Icons.logout_rounded, color: Colors.blue),
             tooltip: AppLocalizations.of(context)?.dropoff ?? 'Drop-off',
           ),
@@ -714,8 +743,10 @@ class _QuickAttendanceButtons extends StatelessWidget {
         final body = status == AttendanceStatus.checkIn
             ? (AppLocalizations.of(context)?.onBusNow(student.name) ??
                   'ركب ${student.name} الحافلة الآن')
-            : (AppLocalizations.of(context)?.offBusNow(student.name) ??
-                  'نزل ${student.name} من الحافلة الآن');
+            : status == AttendanceStatus.checkOut
+                ? (AppLocalizations.of(context)?.offBusNow(student.name) ??
+                      'نزل ${student.name} من الحافلة الآن')
+                : 'تم تسجيل ${student.name} كغائب اليوم'; // Absent body
 
         final notification = AppNotification(
           id: const Uuid().v4(),
@@ -748,8 +779,10 @@ class _QuickAttendanceButtons extends StatelessWidget {
               status == AttendanceStatus.checkIn
                   ? (AppLocalizations.of(context)?.pickedUpSuccessfully ??
                         'Picked up successfully')
-                  : (AppLocalizations.of(context)?.droppedOffSuccessfully ??
-                        'Dropped off successfully'),
+                  : status == AttendanceStatus.checkOut
+                      ? (AppLocalizations.of(context)?.droppedOffSuccessfully ??
+                            'Dropped off successfully')
+                      : 'Marked as absent successfully',
             ),
             duration: const Duration(seconds: 1),
           ),

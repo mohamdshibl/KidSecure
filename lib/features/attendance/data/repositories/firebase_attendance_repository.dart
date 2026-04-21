@@ -24,7 +24,8 @@ class FirebaseAttendanceRepository implements AttendanceRepository {
           final records = snapshot.docs
               .map((doc) => AttendanceRecord.fromMap(doc.data(), doc.id))
               .toList();
-          // Sort in memory to avoid index requirements
+          
+          // Sort in memory to avoid index requirement
           records.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           return records;
         });
@@ -44,8 +45,13 @@ class FirebaseAttendanceRepository implements AttendanceRepository {
   }
 
   @override
-  Future<StudentModel?> getStudentByQrCode(String qrCode, {String? busId}) async {
-    var queryRef = _firestore.collection('students').where('qrCode', isEqualTo: qrCode);
+  Future<StudentModel?> getStudentByQrCode(
+    String qrCode, {
+    String? busId,
+  }) async {
+    var queryRef = _firestore
+        .collection('students')
+        .where('qrCode', isEqualTo: qrCode);
 
     if (busId != null) {
       queryRef = queryRef.where('busId', isEqualTo: busId);

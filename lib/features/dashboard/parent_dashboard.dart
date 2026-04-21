@@ -524,8 +524,8 @@ class _DismissalActions extends StatelessWidget {
           builder: (context, attendanceSnapshot) {
             final childState = (attendanceSnapshot.data ?? []).resolveChildState();
             
-            // If child already left, don't allow new requests
-            if (activeRequest == null && (childState == ChildState.leftSchool || childState == ChildState.absent)) {
+            // If child already left or is on bus, don't allow new requests
+            if (activeRequest == null && (childState == ChildState.leftSchool || childState == ChildState.absent || childState == ChildState.onBus)) {
               return const SizedBox.shrink();
             }
 

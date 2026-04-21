@@ -87,8 +87,10 @@ class FirebaseDismissalRepository implements DismissalRepository {
           ];
 
           final activeDocs = snapshot.docs.where((doc) {
-            final status = doc.get('status') as String?;
-            return activeStatuses.contains(status);
+            final data = doc.data();
+            final status = data['status'] as String?;
+            final docParentId = data['parentId'] as String?;
+            return parentId == docParentId && activeStatuses.contains(status);
           }).toList();
 
           if (activeDocs.isEmpty) return null;
@@ -111,19 +113,19 @@ class FirebaseDismissalRepository implements DismissalRepository {
     return _firestore
         .collection('dismissal_requests')
         .where('busId', isEqualTo: busId)
-        .where(
-          'status',
-          whereIn: [
+        .snapshots()
+        .map((snapshot) {
+          final activeStatuses = [
             DismissalStatus.pending.toString().split('.').last,
             DismissalStatus.arrivingSoon.toString().split('.').last,
             DismissalStatus.atGate.toString().split('.').last,
-          ],
-        )
-        .snapshots()
-        .map((snapshot) {
-          final requests = snapshot.docs.map((doc) {
-            return DismissalRequest.fromMap(doc.id, doc.data());
-          }).toList();
+          ];
+
+          final requests = snapshot.docs
+              .map((doc) => DismissalRequest.fromMap(doc.id, doc.data()))
+              .where((req) => activeStatuses.contains(req.status.toString().split('.').last))
+              .toList();
+          
           requests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           return requests;
         });
