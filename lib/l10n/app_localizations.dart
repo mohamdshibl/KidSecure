@@ -781,6 +781,90 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'المسح'**
   String get scan;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت كلمة المرور؟'**
+  String get forgotPassword;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة تعيين كلمة المرور'**
+  String get resetPassword;
+
+  /// No description provided for @resetPasswordDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.'**
+  String get resetPasswordDesc;
+
+  /// No description provided for @sendLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال الرابط'**
+  String get sendLink;
+
+  /// No description provided for @resetPasswordEmailSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني.'**
+  String get resetPasswordEmailSent;
+
+  /// No description provided for @enterEmailError.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إدخال البريد الإلكتروني'**
+  String get enterEmailError;
+
+  /// No description provided for @errorTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ'**
+  String get errorTitle;
+
+  /// No description provided for @noInternet.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.'**
+  String get noInternet;
+
+  /// No description provided for @ok.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسناً'**
+  String get ok;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني غير صالح.'**
+  String get invalidEmail;
+
+  /// No description provided for @userNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد حساب مسجل بهذا البريد الإلكتروني.'**
+  String get userNotFound;
+
+  /// No description provided for @wrongPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور التي أدخلتها غير صحيحة.'**
+  String get wrongPassword;
+
+  /// No description provided for @tooManyRequests.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولات كثيرة جداً. يرجى المحاولة مرة أخرى لاحقاً.'**
+  String get tooManyRequests;
+
+  /// No description provided for @unknownError.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'**
+  String get unknownError;
 }
 
 class _AppLocalizationsDelegate

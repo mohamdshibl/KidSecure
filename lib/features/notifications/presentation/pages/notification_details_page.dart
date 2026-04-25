@@ -197,8 +197,9 @@ class NotificationDetailsPage extends StatelessWidget {
                   notification.id,
                 );
                 if (context.mounted) {
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
                   context.pop(); // Return to history
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('تم حذف التنبيه')),
                   );
                 }

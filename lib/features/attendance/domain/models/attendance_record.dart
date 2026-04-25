@@ -26,7 +26,7 @@ class AttendanceRecord extends Equatable {
     return AttendanceRecord(
       id: id,
       studentId: map['studentId'] ?? '',
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: AttendanceStatus.values.firstWhere(
         (e) => e.toString().split('.').last == map['status'],
         orElse: () => AttendanceStatus.checkIn,

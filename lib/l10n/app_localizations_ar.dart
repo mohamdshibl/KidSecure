@@ -367,4 +367,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get scan => 'المسح';
+
+  @override
+  String get forgotPassword => 'نسيت كلمة المرور؟';
+
+  @override
+  String get resetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get resetPasswordDesc =>
+      'أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.';
+
+  @override
+  String get sendLink => 'إرسال الرابط';
+
+  @override
+  String get resetPasswordEmailSent =>
+      'تم إرسال رابط إعادة التعيين! تحقق من بريدك الإلكتروني.';
+
+  @override
+  String get enterEmailError => 'يرجى إدخال البريد الإلكتروني';
+
+  @override
+  String get errorTitle => 'خطأ';
+
+  @override
+  String get noInternet => 'لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.';
+
+  @override
+  String get ok => 'حسناً';
+
+  @override
+  String get invalidEmail => 'البريد الإلكتروني غير صالح.';
+
+  @override
+  String get userNotFound => 'لا يوجد حساب مسجل بهذا البريد الإلكتروني.';
+
+  @override
+  String get wrongPassword => 'كلمة المرور التي أدخلتها غير صحيحة.';
+
+  @override
+  String get tooManyRequests =>
+      'محاولات كثيرة جداً. يرجى المحاولة مرة أخرى لاحقاً.';
+
+  @override
+  String get unknownError => 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
 }

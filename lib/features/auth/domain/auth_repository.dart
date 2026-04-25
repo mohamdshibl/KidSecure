@@ -29,4 +29,5 @@ abstract class AuthRepository {
   Future<void> updateFcmToken(String userId, String? token);
 
   Future<void> logOut();
+  Future<void> sendPasswordResetEmail(String email);
 }

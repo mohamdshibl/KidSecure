@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/auth_repository.dart';
 import '../bloc/login_cubit.dart';
 
@@ -23,16 +24,22 @@ class LoginView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<LoginCubit, LoginState>(
+      listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
         if (state.status == LoginStatus.failure) {
+          _showErrorDialog(context, state.errorMessage);
+          // Reset to initial so the same error doesn't re-trigger on rebuild
+          context.read<LoginCubit>().resetState();
+        } else if (state.status == LoginStatus.resetPasswordSuccess) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Authentication Failure'),
-                backgroundColor: Colors.redAccent,
+                content: Text(AppLocalizations.of(context)!.resetPasswordEmailSent),
+                backgroundColor: Colors.green,
               ),
             );
+          context.read<LoginCubit>().resetState();
         }
       },
       child: Scaffold(
@@ -136,12 +143,12 @@ class LoginView extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () => _showForgotPasswordDialog(context),
                       style: TextButton.styleFrom(
                         foregroundColor: Theme.of(context).primaryColor,
                       ),
                       child: Text(
-                        'Forgot Password?',
+                        AppLocalizations.of(context)!.forgotPassword,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -184,7 +191,127 @@ class LoginView extends StatelessWidget {
       ),
     );
   }
+
+  void _showErrorDialog(BuildContext context, String? message) {
+    final l10n = AppLocalizations.of(context)!;
+    String displayMessage = l10n.unknownError;
+
+    if (message != null) {
+      final msg = message.toLowerCase();
+      if (msg.contains('network-request-failed') ||
+          msg.contains('socketexception') ||
+          msg.contains('network error') ||
+          msg.contains('timeout') ||
+          msg.contains('unreachable host')) {
+        displayMessage = l10n.noInternet;
+      } else if (msg.contains('invalid-email')) {
+        displayMessage = l10n.invalidEmail;
+      } else if (msg.contains('user-not-found')) {
+        displayMessage = l10n.userNotFound;
+      } else if (msg.contains('wrong-password')) {
+        displayMessage = l10n.wrongPassword;
+      } else if (msg.contains('too-many-requests')) {
+        displayMessage = l10n.tooManyRequests;
+      } else {
+        displayMessage = message.replaceAll('Exception:', '').trim();
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(
+              l10n.errorTitle,
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          displayMessage,
+          style: GoogleFonts.inter(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              l10n.ok,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog(BuildContext context) {
+    final emailController = TextEditingController(
+      text: context.read<LoginCubit>().state.email,
+    );
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          l10n.resetPassword,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.resetPasswordDesc,
+              style: GoogleFonts.inter(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(
+                hintText: l10n.email,
+                prefixIcon: const Icon(Icons.email_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.close),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final email = emailController.text.trim();
+              if (email.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.enterEmailError)),
+                );
+                return;
+              }
+              context.read<LoginCubit>().resetPassword(email);
+              Navigator.pop(dialogContext);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.sendLink),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
 
 class _EmailInput extends StatelessWidget {
   @override

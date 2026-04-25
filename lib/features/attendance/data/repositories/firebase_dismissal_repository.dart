@@ -74,7 +74,6 @@ class FirebaseDismissalRepository implements DismissalRepository {
   ) {
     return _firestore
         .collection('dismissal_requests')
-        .where('studentId', isEqualTo: studentId)
         .where('parentId', isEqualTo: parentId)
         .snapshots()
         .map((snapshot) {
@@ -89,16 +88,18 @@ class FirebaseDismissalRepository implements DismissalRepository {
           final activeDocs = snapshot.docs.where((doc) {
             final data = doc.data();
             final status = data['status'] as String?;
-            final docParentId = data['parentId'] as String?;
-            return parentId == docParentId && activeStatuses.contains(status);
+            final docStudentId = data['studentId'] as String?;
+            return studentId == docStudentId && activeStatuses.contains(status);
           }).toList();
 
           if (activeDocs.isEmpty) return null;
 
           // Sort by timestamp to get the latest active request
           activeDocs.sort((a, b) {
-            final aTime = a.get('timestamp') as Timestamp?;
-            final bTime = b.get('timestamp') as Timestamp?;
+            final aData = a.data();
+            final bData = b.data();
+            final aTime = aData['timestamp'] as Timestamp?;
+            final bTime = bData['timestamp'] as Timestamp?;
             if (aTime == null || bTime == null) return 0;
             return bTime.compareTo(aTime);
           });
@@ -123,9 +124,13 @@ class FirebaseDismissalRepository implements DismissalRepository {
 
           final requests = snapshot.docs
               .map((doc) => DismissalRequest.fromMap(doc.id, doc.data()))
-              .where((req) => activeStatuses.contains(req.status.toString().split('.').last))
+              .where(
+                (req) => activeStatuses.contains(
+                  req.status.toString().split('.').last,
+                ),
+              )
               .toList();
-          
+
           requests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           return requests;
         });

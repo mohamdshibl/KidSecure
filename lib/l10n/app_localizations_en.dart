@@ -367,4 +367,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scan => 'Scan';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get resetPasswordDesc =>
+      'Enter your email address and we\'ll send you a link to reset your password.';
+
+  @override
+  String get sendLink => 'Send Link';
+
+  @override
+  String get resetPasswordEmailSent =>
+      'Password reset email sent! Check your inbox.';
+
+  @override
+  String get enterEmailError => 'Please enter your email address';
+
+  @override
+  String get errorTitle => 'Error';
+
+  @override
+  String get noInternet => 'No internet connection. Please check your network.';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get invalidEmail => 'The email address is not valid.';
+
+  @override
+  String get userNotFound => 'No account found with this email.';
+
+  @override
+  String get wrongPassword => 'The password you entered is incorrect.';
+
+  @override
+  String get tooManyRequests => 'Too many attempts. Please try again later.';
+
+  @override
+  String get unknownError => 'An unexpected error occurred. Please try again.';
 }

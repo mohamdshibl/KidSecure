@@ -495,37 +495,44 @@ class _StudentCard extends StatelessWidget {
   }
 }
 
-class _DismissalActions extends StatelessWidget {
+class _DismissalActions extends StatefulWidget {
   final StudentModel student;
 
   const _DismissalActions({required this.student});
+
+  @override
+  State<_DismissalActions> createState() => _DismissalActionsState();
+}
+
+class _DismissalActionsState extends State<_DismissalActions> {
+  bool _isRequesting = false;
 
   @override
   Widget build(BuildContext context) {
     final parentId = context.read<AuthBloc>().state.user?.id ?? '';
     return StreamBuilder<DismissalRequest?>(
       stream: context.read<DismissalRepository>().getActiveRequestForStudent(
-        student.id,
+        widget.student.id,
         parentId,
       ),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Error: ${snapshot.error}',
-              style: const TextStyle(color: Colors.red, fontSize: 12),
-            ),
-          );
+          debugPrint('DismissalActions Stream Error: ${snapshot.error}');
+          // If there's a permission error, do not hide the widget entirely.
+          // Fall through so the pickup button stays visible.
         }
         final activeRequest = snapshot.data;
 
         return StreamBuilder<List<AttendanceRecord>>(
-          stream: context.read<AttendanceRepository>().getStudentAttendance(student.id),
+          stream: context.read<AttendanceRepository>().getStudentAttendance(widget.student.id),
           builder: (context, attendanceSnapshot) {
             final childState = (attendanceSnapshot.data ?? []).resolveChildState();
             
-            // If child already left or is on bus, don't allow new requests
-            if (activeRequest == null && (childState == ChildState.leftSchool || childState == ChildState.absent || childState == ChildState.onBus)) {
+            // Only hide the button if the child has already left or is absent.
+            // When the child is onBus, the parent SHOULD be able to request pickup.
+            if (activeRequest == null &&
+                (childState == ChildState.leftSchool ||
+                    childState == ChildState.absent)) {
               return const SizedBox.shrink();
             }
 
@@ -534,11 +541,26 @@ class _DismissalActions extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: activeRequest != null
-                        ? _buildStatusIndicator(context, activeRequest)
+                    child: (activeRequest != null || _isRequesting)
+                        ? _buildStatusIndicator(
+                            context,
+                            activeRequest ??
+                                DismissalRequest(
+                                  id: '',
+                                  studentId: widget.student.id,
+                                  studentName: widget.student.name,
+                                  studentGrade: widget.student.grade,
+                                  parentId: parentId,
+                                  parentName: '',
+                                  status: DismissalStatus.pending,
+                                  timestamp: DateTime.now(),
+                                ),
+                          )
                         : ElevatedButton.icon(
                             onPressed: () async {
                               final parent = context.read<AuthBloc>().state.user!;
+                              
+                              setState(() => _isRequesting = true);
                               
                               // Logic to determine if child is on bus and which bus
                               final attendanceRecords = attendanceSnapshot.data ?? [];
@@ -548,9 +570,9 @@ class _DismissalActions extends StatelessWidget {
 
                               final request = DismissalRequest(
                                 id: '',
-                                studentId: student.id,
-                                studentName: student.name,
-                                studentGrade: student.grade,
+                                studentId: widget.student.id,
+                                studentName: widget.student.name,
+                                studentGrade: widget.student.grade,
                                 parentId: parent.id,
                                 parentName: parent.name,
                                 busId: busId, // Route to bus if on board
@@ -570,8 +592,8 @@ class _DismissalActions extends StatelessWidget {
                                     await fcmService.sendToBus(
                                       busId: busId,
                                       title: 'Pickup Request',
-                                      body: 'Parent of ${student.name} is waiting at the stop.',
-                                      data: {'type': 'pickup', 'studentId': student.id},
+                                      body: 'Parent of ${widget.student.name} is waiting at the stop.',
+                                      data: {'type': 'pickup', 'studentId': widget.student.id},
                                     );
                                   } else {
                                     // Optionally send to gate tokens if you have them, 
@@ -596,6 +618,10 @@ class _DismissalActions extends StatelessWidget {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text('Error: $e')),
                                   );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() => _isRequesting = false);
                                 }
                               }
                             },
@@ -717,11 +743,21 @@ class _LiveStatusBadge extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           debugPrint('Attendance Stream Error: ${snapshot.error}');
-          return Text(
-            'Err: ${snapshot.error}'.replaceAll('[cloud_firestore/permission-denied]', 'Perms'),
-            style: const TextStyle(color: Colors.red, fontSize: 10),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          // Show a neutral badge instead of exposing a raw error
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              AppLocalizations.of(context)?.notSpecified ?? 'Not Specified',
+              style: GoogleFonts.notoKufiArabic(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
           );
         }
 

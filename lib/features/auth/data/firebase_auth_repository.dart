@@ -160,4 +160,15 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> logOut() async {
     await _firebaseAuth.signOut();
   }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('An unknown error occurred');
+    }
+  }
 }

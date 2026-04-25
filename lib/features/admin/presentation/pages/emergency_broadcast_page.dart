@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../domain/broadcast_repository.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../core/connectivity/connectivity_cubit.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class EmergencyBroadcastPage extends StatefulWidget {
   const EmergencyBroadcastPage({super.key});
@@ -14,6 +16,7 @@ class EmergencyBroadcastPage extends StatefulWidget {
 class _EmergencyBroadcastPageState extends State<EmergencyBroadcastPage> {
   String _selectedTemplate = 'lockdown';
   List<BroadcastTarget> _selectedTargets = [BroadcastTarget.all];
+  VoidCallback? _resetSlider;
   final TextEditingController _messageController = TextEditingController(
     text:
         'تنبيه هام: تم تفعيل بروتوكول الإغلاق الكلي للمدرسة فوراً. يرجى البقاء في أماكن آمنة حتى إشعار آخر.',
@@ -81,6 +84,13 @@ class _EmergencyBroadcastPageState extends State<EmergencyBroadcastPage> {
   }
 
   Future<void> _sendEmergencyBroadcast() async {
+    final connectivity = context.read<ConnectivityCubit>().state;
+    if (connectivity.status == ConnectivityStatus.disconnected) {
+      _resetSlider?.call();
+      _showNoInternetDialog();
+      return;
+    }
+
     setState(() => _isSending = true);
 
     try {
@@ -120,6 +130,23 @@ class _EmergencyBroadcastPageState extends State<EmergencyBroadcastPage> {
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
+  }
+
+  void _showNoInternetDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.errorTitle),
+        content: Text(l10n.noInternet),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -430,6 +457,7 @@ class _EmergencyBroadcastPageState extends State<EmergencyBroadcastPage> {
     return _EmergencySlider(
       onConfirm: _sendEmergencyBroadcast,
       isSending: _isSending,
+      onReset: (reset) => _resetSlider = reset,
     );
   }
 
@@ -450,8 +478,13 @@ class _EmergencyBroadcastPageState extends State<EmergencyBroadcastPage> {
 class _EmergencySlider extends StatefulWidget {
   final VoidCallback onConfirm;
   final bool isSending;
+  final void Function(VoidCallback reset) onReset;
 
-  const _EmergencySlider({required this.onConfirm, required this.isSending});
+  const _EmergencySlider({
+    required this.onConfirm,
+    required this.isSending,
+    required this.onReset,
+  });
 
   @override
   State<_EmergencySlider> createState() => _EmergencySliderState();
@@ -471,6 +504,10 @@ class _EmergencySliderState extends State<_EmergencySlider>
       duration: const Duration(milliseconds: 300),
     );
     _animation = Tween<double>(begin: 0, end: 0).animate(_controller);
+    // Register the reset callback with the parent once the frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onReset(() => _animateTo(0));
+    });
   }
 
   @override
@@ -497,6 +534,10 @@ class _EmergencySliderState extends State<_EmergencySlider>
           });
         });
     _controller.forward(from: 0);
+  }
+
+  void resetSlider() {
+    _animateTo(0);
   }
 
   @override

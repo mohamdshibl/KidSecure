@@ -12,6 +12,7 @@ import 'features/auth/data/firebase_auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+import 'core/connectivity/connectivity_cubit.dart';
 import 'features/dashboard/dashboard_page.dart';
 import 'features/auth/presentation/pages/add_staff_page.dart';
 import 'features/auth/presentation/pages/signup_page.dart';
@@ -189,6 +190,7 @@ class MyApp extends StatelessWidget {
                   repository: busTrackingRepository,
                 ),
           ),
+          BlocProvider(create: (context) => ConnectivityCubit()),
         ],
         child: const AppView(),
       ),
@@ -380,6 +382,34 @@ class _AppViewState extends State<AppView> {
               darkTheme: AppTheme.darkTheme,
               themeMode: themeMode,
               routerConfig: _router,
+              builder: (context, child) {
+                return BlocListener<ConnectivityCubit, ConnectivityState>(
+                  listener: (context, state) {
+                    if (state.status == ConnectivityStatus.disconnected) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)?.noInternet ??
+                                'No internet connection',
+                          ),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(days: 1), // Persistent
+                          action: SnackBarAction(
+                            label: AppLocalizations.of(context)?.close ?? 'Close',
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            },
+                            textColor: Colors.white,
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    }
+                  },
+                  child: child!,
+                );
+              },
             );
           },
         );

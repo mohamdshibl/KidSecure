@@ -146,5 +146,19 @@
   "startTripStatus": "Trip Status",
   "tripInProgress": "Trip in Progress",
   "inactive": "Inactive",
-  "scan": "Scan"
+  "scan": "Scan",
+  "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+  "resetPasswordDesc": "Enter your email address and we'll send you a link to reset your password.",
+  "sendLink": "Send Link",
+  "resetPasswordEmailSent": "Password reset email sent! Check your inbox.",
+  "enterEmailError": "Please enter your email address",
+  "errorTitle": "Error",
+  "noInternet": "No internet connection. Please check your network.",
+  "ok": "OK",
+  "invalidEmail": "The email address is not valid.",
+  "userNotFound": "No account found with this email.",
+  "wrongPassword": "The password you entered is incorrect.",
+  "tooManyRequests": "Too many attempts. Please try again later.",
+  "unknownError": "An unexpected error occurred. Please try again."
 }

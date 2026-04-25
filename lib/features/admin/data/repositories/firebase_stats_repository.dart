@@ -91,7 +91,7 @@ class FirebaseStatsRepository implements StatsRepository {
       }
 
       for (var doc in trendQuery.docs) {
-        final timestamp = (doc.data()['timestamp'] as Timestamp).toDate();
+        final timestamp = (doc.data()['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
         final date = DateTime(timestamp.year, timestamp.month, timestamp.day);
         if (trendMap.containsKey(date)) {
           trendMap[date] = (trendMap[date] ?? 0) + 1;

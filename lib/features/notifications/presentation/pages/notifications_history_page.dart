@@ -123,8 +123,9 @@ class _NotificationsHistoryPageState extends State<NotificationsHistoryPage> {
                 final user = context.read<AuthBloc>().state.user!;
                 await context.read<NotificationRepository>().deleteAll(user.id);
                 if (context.mounted) {
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('تم مسح جميع التنبيهات')),
                   );
                 }

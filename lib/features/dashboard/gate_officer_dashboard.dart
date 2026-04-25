@@ -808,8 +808,6 @@ class _ProfileView extends StatelessWidget {
                 _buildProfileCard(context, user?.name ?? 'مسؤول البوابة'),
                 const SizedBox(height: 24),
                 _buildSettingsSection(context),
-                const SizedBox(height: 24),
-                _buildSupportSection(context),
                 const SizedBox(height: 40),
                 _buildLogoutButton(context),
               ],
@@ -931,34 +929,7 @@ class _ProfileView extends StatelessWidget {
     );
   }
 
-  Widget _buildSupportSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context)?.supportAndHelp ?? 'الدعم والمساعدة',
-          style: GoogleFonts.notoKufiArabic(
-            color: const Color(0xFF64748B),
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _SettingsTile(
-          icon: Icons.help_outline_rounded,
-          color: Colors.purple,
-          title: AppLocalizations.of(context)?.helpCenter ?? 'مركز المساعدة',
-          onTap: () {},
-        ),
-        _SettingsTile(
-          icon: Icons.info_outline_rounded,
-          color: Colors.blueGrey,
-          title: AppLocalizations.of(context)?.aboutApp ?? 'عن التطبيق',
-          onTap: () {},
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildLogoutButton(BuildContext context) {
     return SizedBox(
@@ -1141,8 +1112,9 @@ class _ManualSearchDialogState extends State<_ManualSearchDialog> {
     try {
       await context.read<AttendanceRepository>().recordAttendance(record);
       if (mounted) {
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             backgroundColor: Colors.green,
             content: Text(

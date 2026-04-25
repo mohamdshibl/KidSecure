@@ -252,7 +252,10 @@ class _HomeView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 itemCount: students.length,
                 itemBuilder: (context, index) {
-                  return _StudentManifestItem(student: students[index]);
+                  return _StudentManifestItem(
+                    key: ValueKey(students[index].id),
+                    student: students[index],
+                  );
                 },
               );
             },

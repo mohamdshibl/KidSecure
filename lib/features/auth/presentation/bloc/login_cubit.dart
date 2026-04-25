@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/auth_repository.dart';
 
-enum LoginStatus { initial, loading, success, failure }
+enum LoginStatus { initial, loading, success, failure, resetPasswordSuccess }
 
 class LoginState extends Equatable {
   final String email;
@@ -58,5 +58,24 @@ class LoginCubit extends Cubit<LoginState> {
         state.copyWith(status: LoginStatus.failure, errorMessage: e.toString()),
       );
     }
+  }
+
+  Future<void> resetPassword(String email) async {
+    emit(state.copyWith(status: LoginStatus.loading));
+    try {
+      await _authRepository.sendPasswordResetEmail(email);
+      emit(state.copyWith(status: LoginStatus.resetPasswordSuccess));
+    } catch (e) {
+      emit(state.copyWith(
+        status: LoginStatus.failure,
+        errorMessage: e.toString(),
+      ));
+    }
+  }
+
+  /// Resets status to initial (keeps email/password).
+  /// Prevents BlocListener from re-firing on the next rebuild.
+  void resetState() {
+    emit(state.copyWith(status: LoginStatus.initial, errorMessage: null));
   }
 }

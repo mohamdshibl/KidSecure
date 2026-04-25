@@ -60,6 +60,7 @@ dependencies:
   bloc: ^9.2.0
   http: ^1.2.0
   dart_jsonwebtoken: ^2.4.2
+  connectivity_plus: ^6.0.3
   flutter_localizations:
     sdk: flutter
 
