@@ -12,6 +12,10 @@ import '../attendance/domain/models/attendance_record.dart';
 import '../../core/theme/theme_cubit.dart';
 import '../../core/localization/language_cubit.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:uuid/uuid.dart';
+import '../../core/services/fcm_v1_service.dart';
+import '../notifications/domain/repositories/notification_repository.dart';
+import '../notifications/domain/models/notification_model.dart';
 
 class GateOfficerDashboard extends StatefulWidget {
   const GateOfficerDashboard({super.key});
@@ -48,7 +52,7 @@ class _GateOfficerDashboardState extends State<GateOfficerDashboard> {
         color: Theme.of(context).cardTheme.color,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -312,7 +316,7 @@ class _RequestsView extends StatelessWidget {
             color: Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Theme.of(context).dividerColor.withOpacity(0.05),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.05),
             ),
           ),
           child: Stack(
@@ -403,7 +407,7 @@ class _DismissalCard extends StatelessWidget {
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.05),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.05),
         ),
       ),
       child: Column(
@@ -420,7 +424,7 @@ class _DismissalCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -490,7 +494,7 @@ class _DismissalCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
+              color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -683,7 +687,7 @@ class _ScannerView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
-              color: const Color(0xFF3B82F6).withOpacity(0.1),
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -833,7 +837,7 @@ class _ProfileView extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 35,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             child: const Icon(
               Icons.person_rounded,
               size: 40,
@@ -857,7 +861,7 @@ class _ProfileView extends StatelessWidget {
                   AppLocalizations.of(context)?.gateOfficerRoleLong ??
                       'ضابط أمن البوابة',
                   style: GoogleFonts.notoKufiArabic(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 12,
                   ),
                 ),
@@ -960,7 +964,6 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
-  final VoidCallback? onTap;
 
   const _SettingsTile({
     required this.icon,
@@ -968,7 +971,6 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
-    this.onTap,
   });
 
   @override
@@ -979,15 +981,14 @@ class _SettingsTile extends StatelessWidget {
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.05),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.05),
         ),
       ),
       child: ListTile(
-        onTap: onTap,
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -1008,15 +1009,7 @@ class _SettingsTile extends StatelessWidget {
                 ),
               )
             : null,
-        trailing:
-            trailing ??
-            (onTap != null
-                ? Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 14,
-                  )
-                : null),
+        trailing: trailing,
       ),
     );
   }
@@ -1026,7 +1019,7 @@ class _RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = Colors.white.withValues(alpha: 0.05)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -1048,7 +1041,7 @@ class _RadarPainter extends CustomPainter {
     );
 
     final dotPaint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
 
     for (var i = 0; i < 50; i++) {
@@ -1112,6 +1105,37 @@ class _ManualSearchDialogState extends State<_ManualSearchDialog> {
     try {
       await context.read<AttendanceRepository>().recordAttendance(record);
       if (mounted) {
+        final title = AppLocalizations.of(context)?.schoolGateUpdate ?? 'تحديث البوابة';
+        final body = status == AttendanceStatus.checkIn
+            ? (AppLocalizations.of(context)?.enteredSchool(student.name) ??
+                  'دخل ${student.name} المدرسة الآن')
+            : (AppLocalizations.of(context)?.leftSchoolNotification(student.name) ??
+                  'غادر ${student.name} المدرسة الآن');
+
+        final notification = AppNotification(
+          id: const Uuid().v4(),
+          title: title,
+          body: body,
+          timestamp: DateTime.now(),
+          isRead: false,
+          type: NotificationType.attendance,
+          parentId: student.parentId,
+          studentId: student.id,
+        );
+
+        context.read<NotificationRepository>().sendNotification(notification);
+
+        context.read<FcmV1Service>().sendToParent(
+          parentId: student.parentId,
+          title: title,
+          body: body,
+          data: {
+            'type': 'attendance',
+            'status': status == AttendanceStatus.checkIn ? 'check_in' : 'check_out',
+            'studentId': student.id,
+          },
+        );
+
         final scaffoldMessenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
         scaffoldMessenger.showSnackBar(

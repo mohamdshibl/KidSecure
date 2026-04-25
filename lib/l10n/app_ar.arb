@@ -160,5 +160,18 @@
   "userNotFound": "لا يوجد حساب مسجل بهذا البريد الإلكتروني.",
   "wrongPassword": "كلمة المرور التي أدخلتها غير صحيحة.",
   "tooManyRequests": "محاولات كثيرة جداً. يرجى المحاولة مرة أخرى لاحقاً.",
-  "unknownError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى."
+  "unknownError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+  "schoolGateUpdate": "تحديث البوابة",
+  "enteredSchool": "دخل {name} المدرسة للتو",
+  "@enteredSchool": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "leftSchoolNotification": "غادر {name} المدرسة للتو",
+  "@leftSchoolNotification": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  }
 }

@@ -160,5 +160,18 @@
   "userNotFound": "No account found with this email.",
   "wrongPassword": "The password you entered is incorrect.",
   "tooManyRequests": "Too many attempts. Please try again later.",
-  "unknownError": "An unexpected error occurred. Please try again."
+  "unknownError": "An unexpected error occurred. Please try again.",
+  "schoolGateUpdate": "School Gate Update",
+  "enteredSchool": "{name} entered the school just now",
+  "@enteredSchool": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "leftSchoolNotification": "{name} left the school just now",
+  "@leftSchoolNotification": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  }
 }

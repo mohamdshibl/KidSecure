@@ -412,4 +412,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unknownError => 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get schoolGateUpdate => 'تحديث البوابة';
+
+  @override
+  String enteredSchool(String name) {
+    return 'دخل $name المدرسة للتو';
+  }
+
+  @override
+  String leftSchoolNotification(String name) {
+    return 'غادر $name المدرسة للتو';
+  }
 }

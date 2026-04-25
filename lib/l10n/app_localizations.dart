@@ -865,6 +865,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'**
   String get unknownError;
+
+  /// No description provided for @schoolGateUpdate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث البوابة'**
+  String get schoolGateUpdate;
+
+  /// No description provided for @enteredSchool.
+  ///
+  /// In ar, this message translates to:
+  /// **'دخل {name} المدرسة للتو'**
+  String enteredSchool(String name);
+
+  /// No description provided for @leftSchoolNotification.
+  ///
+  /// In ar, this message translates to:
+  /// **'غادر {name} المدرسة للتو'**
+  String leftSchoolNotification(String name);
 }
 
 class _AppLocalizationsDelegate

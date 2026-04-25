@@ -411,4 +411,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknownError => 'An unexpected error occurred. Please try again.';
+
+  @override
+  String get schoolGateUpdate => 'School Gate Update';
+
+  @override
+  String enteredSchool(String name) {
+    return '$name entered the school just now';
+  }
+
+  @override
+  String leftSchoolNotification(String name) {
+    return '$name left the school just now';
+  }
 }
