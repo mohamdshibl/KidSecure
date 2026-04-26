@@ -33,29 +33,25 @@ class FirebaseStatsRepository implements StatsRepository {
       final totalStudents = totalStudentsQuery.count ?? 0;
 
       // 2. Today's Attendance
-      final presentTodayQuery = await _firestore
+      final todayAttendanceQuery = await _firestore
           .collection('attendance')
           .where(
             'timestamp',
             isGreaterThanOrEqualTo: Timestamp.fromDate(startOfToday),
           )
           .where('timestamp', isLessThan: Timestamp.fromDate(endOfToday))
-          .where('status', isEqualTo: 'checkIn')
-          .count()
           .get();
-      final presentToday = presentTodayQuery.count ?? 0;
-
-      final absentTodayQuery = await _firestore
-          .collection('attendance')
-          .where(
-            'timestamp',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfToday),
-          )
-          .where('timestamp', isLessThan: Timestamp.fromDate(endOfToday))
-          .where('status', isEqualTo: 'absent')
-          .count()
-          .get();
-      final absentToday = absentTodayQuery.count ?? 0;
+          
+      int presentToday = 0;
+      int absentToday = 0;
+      for (var doc in todayAttendanceQuery.docs) {
+        final status = doc.data()['status'] as String?;
+        if (status == 'checkIn') {
+          presentToday++;
+        } else if (status == 'absent') {
+          absentToday++;
+        }
+      }
 
       // 3. Total Staff (Admins, Gate Officers, Drivers)
       final staffQuery = await _firestore
@@ -81,7 +77,6 @@ class FirebaseStatsRepository implements StatsRepository {
             'timestamp',
             isGreaterThanOrEqualTo: Timestamp.fromDate(sevenDaysAgo),
           )
-          .where('status', isEqualTo: 'checkIn')
           .get();
 
       final trendMap = <DateTime, int>{};
@@ -91,7 +86,10 @@ class FirebaseStatsRepository implements StatsRepository {
       }
 
       for (var doc in trendQuery.docs) {
-        final timestamp = (doc.data()['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+        final data = doc.data();
+        if (data['status'] != 'checkIn') continue;
+        
+        final timestamp = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
         final date = DateTime(timestamp.year, timestamp.month, timestamp.day);
         if (trendMap.containsKey(date)) {
           trendMap[date] = (trendMap[date] ?? 0) + 1;
@@ -109,9 +107,10 @@ class FirebaseStatsRepository implements StatsRepository {
         pendingDismissals: pendingDismissals,
         attendanceTrend: attendanceTrend.map((e) => e.value).toList(),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error fetching stats: $e');
-      return AdminStats.empty();
+      print('Stack trace: $stackTrace');
+      throw Exception('Failed to load statistics. Please try again.');
     }
   }
 }

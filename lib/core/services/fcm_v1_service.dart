@@ -7,38 +7,53 @@ import 'package:http/http.dart' as http;
 /// Service that sends real device push notifications via the FCM HTTP v1 API.
 ///
 /// SETUP REQUIRED:
-/// 1. Firebase Console → Project Settings → Service Accounts → Generate new private key.
-/// 2. From the downloaded JSON, copy the values below.
+/// Pass credentials via constructor (load from environment or secure storage).
 class FcmV1Service {
-  // ─── YOU MUST FILL THESE THREE IN ──────────────────────────────────────────
-  static const String _projectId = 'kid-86bbc'; 
-  static const String _clientEmail = 'YOUR_SERVICE_ACCOUNT_EMAIL';
-  static const String _privateKey = '''
------BEGIN PRIVATE KEY-----
-YOUR_PRIVATE_KEY_HERE
------END PRIVATE KEY-----
-''';
-  // ──────────────────────────────────────────────────────────────────────────
+  // Constants for Firestore field names
+  static const String _firebaseUsersCollection = 'users';
+  static const String _firebaseRoleField = 'role';
+  static const String _firebaseDriverRole = 'driver';
+  static const String _firebaseBusIdField = 'busId';
+  static const String _firebaseFcmTokenField = 'fcmToken';
+  static const String _androidChannelId = 'high_importance_channel_v3';
 
-  static const String _fcmUrl =
-      'https://fcm.googleapis.com/v1/projects/$_projectId/messages:send';
+  late final String _projectId;
+  late final String _clientEmail;
+  late final String _privateKey;
 
   String? _cachedAccessToken;
   DateTime? _tokenExpiry;
+
+  /// Creates a new FCM service instance.
+  ///
+  /// [projectId] - Firebase project ID
+  /// [clientEmail] - Service account email
+  /// [privateKey] - Service account private key (PEM format)
+  FcmV1Service({
+    required String projectId,
+    required String clientEmail,
+    required String privateKey,
+  }) {
+    _projectId = projectId;
+    _clientEmail = clientEmail;
+    _privateKey = privateKey;
+  }
 
   /// Returns a fresh OAuth2 access token using the service-account JWT flow.
   Future<String?> _getAccessToken() async {
     // Check cache
     if (_cachedAccessToken != null &&
         _tokenExpiry != null &&
-        DateTime.now().isBefore(_tokenExpiry!.subtract(const Duration(seconds: 60)))) {
+        DateTime.now().isBefore(
+          _tokenExpiry!.subtract(const Duration(seconds: 60)),
+        )) {
       return _cachedAccessToken;
     }
 
-    // If placeholders are still there, skip
-    if (_clientEmail.contains('YOUR') || _privateKey.contains('YOUR')) {
+    // Validate credentials
+    if (_clientEmail.isEmpty || _privateKey.isEmpty) {
       if (kDebugMode) {
-        print('[FcmV1Service] ⚠️ FCM Credentials are empty. Push notifications will be skipped.');
+        print('[FcmV1Service] ⚠️ FCM credentials not configured');
       }
       return null;
     }
@@ -47,15 +62,13 @@ YOUR_PRIVATE_KEY_HERE
       final now = DateTime.now();
       final expiry = now.add(const Duration(hours: 1));
 
-      final jwt = JWT(
-        {
-          'iss': _clientEmail,
-          'scope': 'https://www.googleapis.com/auth/firebase.messaging',
-          'aud': 'https://oauth2.googleapis.com/token',
-          'iat': now.millisecondsSinceEpoch ~/ 1000,
-          'exp': expiry.millisecondsSinceEpoch ~/ 1000,
-        },
-      );
+      final jwt = JWT({
+        'iss': _clientEmail,
+        'scope': 'https://www.googleapis.com/auth/firebase.messaging',
+        'aud': 'https://oauth2.googleapis.com/token',
+        'iat': now.millisecondsSinceEpoch ~/ 1000,
+        'exp': expiry.millisecondsSinceEpoch ~/ 1000,
+      });
 
       final token = jwt.sign(RSAPrivateKey(_privateKey));
 
@@ -74,7 +87,11 @@ YOUR_PRIVATE_KEY_HERE
         _tokenExpiry = expiry;
         return _cachedAccessToken;
       } else {
-        if (kDebugMode) print('[FcmV1Service] OAuth failed: ${response.body}');
+        if (kDebugMode) {
+          print(
+            '[FcmV1Service] OAuth failed: ${response.statusCode} ${response.body}',
+          );
+        }
         return null;
       }
     } catch (e) {
@@ -91,11 +108,16 @@ YOUR_PRIVATE_KEY_HERE
     Map<String, String>? data,
   }) async {
     final accessToken = await _getAccessToken();
-    if (accessToken == null) return false;
+    if (accessToken == null) {
+      if (kDebugMode) print('[FcmV1Service] No access token available');
+      return false;
+    }
 
     try {
+      final fcmUrl =
+          'https://fcm.googleapis.com/v1/projects/$_projectId/messages:send';
       final response = await http.post(
-        Uri.parse(_fcmUrl),
+        Uri.parse(fcmUrl),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',
@@ -103,15 +125,13 @@ YOUR_PRIVATE_KEY_HERE
         body: jsonEncode({
           'message': {
             'token': fcmToken,
-            'notification': {
-              'title': title,
-              'body': body,
-            },
+            'notification': {'title': title, 'body': body},
             'android': {
               'priority': 'HIGH',
               'notification': {
-                'channel_id': 'high_importance_channel_v2',
+                'channel_id': _androidChannelId,
                 'sound': 'default',
+                'click_action': 'FLUTTER_NOTIFICATION_CLICK',
               },
             },
             'apns': {
@@ -120,6 +140,7 @@ YOUR_PRIVATE_KEY_HERE
                   'alert': {'title': title, 'body': body},
                   'sound': 'default',
                   'badge': 1,
+                  'mutable-content': 1,
                 },
               },
             },
@@ -128,13 +149,22 @@ YOUR_PRIVATE_KEY_HERE
         }),
       );
 
-      return response.statusCode == 200;
+      if (response.statusCode != 200) {
+        if (kDebugMode) {
+          print(
+            '[FcmV1Service] Send failed: ${response.statusCode} ${response.body}',
+          );
+        }
+        return false;
+      }
+      return true;
     } catch (e) {
+      if (kDebugMode) print('[FcmV1Service] Error sending notification: $e');
       return false;
     }
   }
 
-  Future<void> sendToParent({
+  Future<bool> sendToParent({
     required String parentId,
     required String title,
     required String body,
@@ -142,15 +172,28 @@ YOUR_PRIVATE_KEY_HERE
   }) async {
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(_firebaseUsersCollection)
           .doc(parentId)
           .get();
 
-      final token = doc.data()?['fcmToken'] as String?;
-      if (token == null || token.isEmpty) return;
+      final token = doc.data()?[_firebaseFcmTokenField] as String?;
+      if (token == null || token.isEmpty) {
+        if (kDebugMode)
+          print('[FcmV1Service] No FCM token for parent: $parentId');
+        return false;
+      }
 
-      await sendToToken(fcmToken: token, title: title, body: body, data: data);
-    } catch (e) {}
+      return await sendToToken(
+        fcmToken: token,
+        title: title,
+        body: body,
+        data: data,
+      );
+    } catch (e) {
+      if (kDebugMode)
+        print('[FcmV1Service] Error sending to parent $parentId: $e');
+      return false;
+    }
   }
 
   Future<void> sendToBus({
@@ -161,17 +204,32 @@ YOUR_PRIVATE_KEY_HERE
   }) async {
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'driver')
-          .where('busId', isEqualTo: busId)
+          .collection(_firebaseUsersCollection)
+          .where(_firebaseRoleField, isEqualTo: _firebaseDriverRole)
+          .where(_firebaseBusIdField, isEqualTo: busId)
           .get();
 
+      // Send concurrently instead of sequentially
+      final futures = <Future<bool>>[];
       for (var doc in snapshot.docs) {
-        final token = doc.data()['fcmToken'] as String?;
+        final token = doc.data()[_firebaseFcmTokenField] as String?;
         if (token != null && token.isNotEmpty) {
-          await sendToToken(fcmToken: token, title: title, body: body, data: data);
+          futures.add(
+            sendToToken(fcmToken: token, title: title, body: body, data: data),
+          );
         }
       }
-    } catch (e) {}
+
+      if (futures.isNotEmpty) {
+        final results = await Future.wait(futures);
+        if (kDebugMode) {
+          print(
+            '[FcmV1Service] Sent to bus $busId: ${results.where((r) => r).length}/${results.length} succeeded',
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('[FcmV1Service] Error sending to bus $busId: $e');
+    }
   }
 }

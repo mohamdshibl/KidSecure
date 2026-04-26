@@ -42,11 +42,14 @@ class NotificationService {
 
     // 2. Create High Importance Channel for Android
     const androidChannel = AndroidNotificationChannel(
-      'high_importance_channel_v2',
+      'high_importance_channel_v3',
       'High Importance Notifications',
       description: 'This channel is used for important school updates.',
       importance: Importance.max,
+      enableVibration: true,
+      enableLights: true,
       playSound: true,
+      // Uses system default notification sound
     );
 
     await _localNotifications
@@ -114,12 +117,14 @@ class NotificationService {
     if (notification == null) return;
 
     final androidDetails = AndroidNotificationDetails(
-      'high_importance_channel_v2',
+      'high_importance_channel_v3',
       'High Importance Notifications',
       channelDescription: 'This channel is used for important school updates.',
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
+      enableVibration: true,
+      enableLights: true,
       ticker: 'ticker',
     );
 
@@ -127,6 +132,7 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      sound: 'default',
     );
 
     final notificationDetails = NotificationDetails(

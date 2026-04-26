@@ -96,7 +96,14 @@ void main() async {
   final notificationRepository = FirebaseNotificationRepository();
   final statsRepository = FirebaseStatsRepository();
   final busTrackingRepository = BusTrackingRepositoryImpl();
-  final fcmV1Service = FcmV1Service();
+  
+  // Initialize FCM V1 Service with credentials
+  // TODO: Load these from secure configuration (environment variables or secure storage)
+  final fcmV1Service = FcmV1Service(
+    projectId: 'kid-86bbc',
+    clientEmail: 'firebase-adminsdk-fbsvc@kid-86bbc.iam.gserviceaccount.com',
+    privateKey: const String.fromEnvironment('FCM_PRIVATE_KEY', defaultValue: ''),
+  );
 
   runApp(
     MyApp(
