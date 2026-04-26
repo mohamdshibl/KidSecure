@@ -8,8 +8,15 @@ import '../../../auth/domain/user_model.dart';
 import '../../../../features/notifications/domain/models/notification_model.dart';
 import '../../../../core/theme/theme_cubit.dart';
 
-class BroadcastBanner extends StatelessWidget {
+class BroadcastBanner extends StatefulWidget {
   const BroadcastBanner({super.key});
+
+  @override
+  State<BroadcastBanner> createState() => _BroadcastBannerState();
+}
+
+class _BroadcastBannerState extends State<BroadcastBanner> {
+  final Set<String> _locallyDismissed = {};
 
   @override
   Widget build(BuildContext context) {
@@ -24,19 +31,22 @@ class BroadcastBanner extends StatelessWidget {
         }
 
         // Find the latest message that targets this user's role or 'all'
-        final dismissedIds = context.watch<ThemeCubit>().dismissedBroadcastIds;
+        final dismissedIds = context.read<ThemeCubit>().dismissedBroadcastIds;
         final relevantMessages = snapshot.data!.where((msg) {
-          if (dismissedIds.contains(msg.id)) return false;
+          if (dismissedIds.contains(msg.id) || _locallyDismissed.contains(msg.id)) return false;
           if (msg.target == BroadcastTarget.all) return true;
           if (user.role == UserRole.parent &&
-              msg.target == BroadcastTarget.parents)
+              msg.target == BroadcastTarget.parents) {
             return true;
+          }
           if (user.role == UserRole.driver &&
-              msg.target == BroadcastTarget.drivers)
+              msg.target == BroadcastTarget.drivers) {
             return true;
+          }
           if (user.role == UserRole.gateOfficer &&
-              msg.target == BroadcastTarget.gateOfficers)
+              msg.target == BroadcastTarget.gateOfficers) {
             return true;
+          }
           return false;
         }).toList();
 
@@ -139,9 +149,12 @@ class BroadcastBanner extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       IconButton(
-                        onPressed: () => context
-                            .read<ThemeCubit>()
-                            .dismissBroadcast(latest.id),
+                        onPressed: () {
+                          context.read<ThemeCubit>().dismissBroadcast(latest.id);
+                          setState(() {
+                            _locallyDismissed.add(latest.id);
+                          });
+                        },
                         icon: Icon(
                           Icons.close_rounded,
                           color: Colors.white.withOpacity(0.7),

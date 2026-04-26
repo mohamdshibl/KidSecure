@@ -42,9 +42,9 @@ class NotificationService {
 
     // 2. Create High Importance Channel for Android
     const androidChannel = AndroidNotificationChannel(
-      'high_importance_channel_v3',
-      'High Importance Notifications',
-      description: 'This channel is used for important school updates.',
+      'kidsecure_critical_alerts_v1',
+      'Critical Alerts',
+      description: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
       enableVibration: true,
       enableLights: true,
@@ -76,7 +76,7 @@ class NotificationService {
       if (kDebugMode) {
         print('Foreground message received: ${message.data}');
       }
-      if (message.notification != null) {
+      if (message.notification != null || message.data.containsKey('title')) {
         _showLocalNotification(message);
       }
     });
@@ -113,13 +113,15 @@ class NotificationService {
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    final notification = message.notification;
-    if (notification == null) return;
+    final title = message.notification?.title ?? message.data['title'];
+    final body = message.notification?.body ?? message.data['body'];
+    
+    if (title == null && body == null) return;
 
     final androidDetails = AndroidNotificationDetails(
-      'high_importance_channel_v3',
-      'High Importance Notifications',
-      channelDescription: 'This channel is used for important school updates.',
+      'kidsecure_critical_alerts_v1',
+      'Critical Alerts',
+      channelDescription: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
@@ -141,9 +143,9 @@ class NotificationService {
     );
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
+      message.hashCode,
+      title,
+      body,
       notificationDetails,
       payload: message.data.toString(), // Optional: pass data as payload
     );

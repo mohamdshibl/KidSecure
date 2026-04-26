@@ -55,13 +55,60 @@ import 'features/bus_tracking/data/repositories/bus_tracking_repository_impl.dar
 import 'features/bus_tracking/presentation/cubit/driver_location_cubit.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-/// Top-level function required by Firebase Messaging for background message handling.
-/// MUST be a top-level function — not a static method or closure.
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Firebase is already initialized when this is called.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint('Background FCM message received: ${message.messageId}');
-  // No UI work here — only lightweight processing or local notification show.
+  
+  final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
+  
+  const androidChannel = AndroidNotificationChannel(
+    'kidsecure_critical_alerts_v1',
+    'Critical Alerts',
+    description: 'Important notifications requiring immediate attention.',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+
+  await localNotifications
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(androidChannel);
+
+  final androidDetails = AndroidNotificationDetails(
+    'kidsecure_critical_alerts_v1',
+    'Critical Alerts',
+    channelDescription: 'Important notifications requiring immediate attention.',
+    importance: Importance.max,
+    priority: Priority.high,
+    playSound: true,
+    enableVibration: true,
+    enableLights: true,
+  );
+
+  const iosDetails = DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+    sound: 'default',
+  );
+
+  final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+  final title = message.notification?.title ?? message.data['title'] ?? 'KidSecure';
+  final body = message.notification?.body ?? message.data['body'] ?? '';
+
+  if (title.isNotEmpty || body.isNotEmpty) {
+    await localNotifications.show(
+      message.hashCode,
+      title,
+      body,
+      details,
+      payload: message.data.toString(),
+    );
+  }
 }
 
 void main() async {

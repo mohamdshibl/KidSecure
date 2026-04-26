@@ -15,7 +15,7 @@ class FcmV1Service {
   static const String _firebaseDriverRole = 'driver';
   static const String _firebaseBusIdField = 'busId';
   static const String _firebaseFcmTokenField = 'fcmToken';
-  static const String _androidChannelId = 'high_importance_channel_v3';
+  static const String _androidChannelId = 'kidsecure_critical_alerts_v1';
 
   late final String _projectId;
   late final String _clientEmail;
@@ -125,14 +125,17 @@ class FcmV1Service {
         body: jsonEncode({
           'message': {
             'token': fcmToken,
-            'notification': {'title': title, 'body': body},
+            // DO NOT set root 'notification' here. We use data messages
+            // so we can intercept them in FirebaseMessaging.onBackgroundMessage
+            // and show them manually with flutter_local_notifications for guaranteed sound!
+            'data': {
+              'title': title,
+              'body': body,
+              ...data ?? {},
+            },
             'android': {
               'priority': 'HIGH',
-              'notification': {
-                'channel_id': _androidChannelId,
-                'sound': 'default',
-                'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-              },
+              // Notice we omit the 'notification' block here to make it a Data message on Android.
             },
             'apns': {
               'payload': {
@@ -144,7 +147,6 @@ class FcmV1Service {
                 },
               },
             },
-            'data': data ?? {},
           },
         }),
       );

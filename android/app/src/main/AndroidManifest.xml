@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:label="kidsecure"
         android:name="${applicationName}"
@@ -51,7 +53,7 @@
         <!-- Set default channel for Firebase so background notifications pop down and play sound -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="high_importance_channel_v3" />
+            android:value="kidsecure_critical_alerts_v1" />
 
         <!-- Required for geolocator to run a foreground service -->
         <service

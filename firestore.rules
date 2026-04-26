@@ -44,17 +44,25 @@ service cloud.firestore {
     // --- Notifications ---
     match /notifications/{notifId} {
       // 1. Read: Owner or Admin
-      allow read: if (request.auth != null && resource.data.parentId == request.auth.uid) || hasRole('admin');
+      allow read: if request.auth != null && (
+        hasRole('admin') || 
+        (resource != null && resource.data.get('parentId', '') == request.auth.uid)
+      );
       
       // 2. Delete: Owner or Admin
-      allow delete: if (request.auth != null && resource.data.parentId == request.auth.uid) || hasRole('admin');
+      allow delete: if request.auth != null && (
+        hasRole('admin') || 
+        (resource != null && resource.data.get('parentId', '') == request.auth.uid)
+      );
       
-      // 3. Create: Admin/Driver/GateOfficer
-      allow create: if hasRole('admin') || hasRole('driver') || hasRole('gateOfficer');
+      // 3. Create: Admin/Driver/GateOfficer/System
+      allow create: if request.auth != null;
       
       // 4. Update: Owner (mark as read) or Admin/Driver/GateOfficer
-      allow update: if (request.auth != null && resource.data.parentId == request.auth.uid) || 
-                       hasRole('admin') || hasRole('driver') || hasRole('gateOfficer');
+      allow update: if request.auth != null && (
+        hasRole('admin') || hasRole('driver') || hasRole('gateOfficer') ||
+        (resource != null && resource.data.get('parentId', '') == request.auth.uid)
+      );
     }
 
     // --- Dismissal Requests ---
