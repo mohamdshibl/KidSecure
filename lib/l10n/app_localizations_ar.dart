@@ -418,11 +418,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String enteredSchool(String name) {
-    return 'دخل $name المدرسة للتو';
+    return 'دخل $name المدرسة الان';
   }
 
   @override
   String leftSchoolNotification(String name) {
-    return 'غادر $name المدرسة للتو';
+    return 'غادر $name المدرسة الان';
   }
 }

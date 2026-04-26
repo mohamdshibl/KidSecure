@@ -875,13 +875,13 @@ abstract class AppLocalizations {
   /// No description provided for @enteredSchool.
   ///
   /// In ar, this message translates to:
-  /// **'دخل {name} المدرسة للتو'**
+  /// **'دخل {name} المدرسة الان'**
   String enteredSchool(String name);
 
   /// No description provided for @leftSchoolNotification.
   ///
   /// In ar, this message translates to:
-  /// **'غادر {name} المدرسة للتو'**
+  /// **'غادر {name} المدرسة الان'**
   String leftSchoolNotification(String name);
 }
 

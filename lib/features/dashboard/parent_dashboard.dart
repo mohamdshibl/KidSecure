@@ -41,9 +41,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
   void _initStreams() {
     final user = context.read<AuthBloc>().state.user!;
     setState(() {
-      _studentsStream = context.read<AttendanceRepository>().getStudentsByParent(
-        user.id,
-      );
+      _studentsStream = context
+          .read<AttendanceRepository>()
+          .getStudentsByParent(user.id);
       _notificationsStream = context
           .read<NotificationRepository>()
           .getNotifications(user.id);
@@ -212,10 +212,12 @@ class _HomeView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               if (students.isEmpty)
-                Center(child: Padding(
-                  padding: const EdgeInsets.only(top: 100),
-                  child: _EmptyDashboard(),
-                ))
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 100),
+                    child: _EmptyDashboard(),
+                  ),
+                )
               else
                 ...students.map((student) => _StudentCard(student: student)),
               const SizedBox(height: 32),
@@ -355,7 +357,8 @@ class _ProfileView extends StatelessWidget {
               builder: (context, locale) {
                 return Switch(
                   value: locale.languageCode == 'en',
-                  onChanged: (_) => context.read<LanguageCubit>().toggleLanguage(),
+                  onChanged: (_) =>
+                      context.read<LanguageCubit>().toggleLanguage(),
                   activeColor: Theme.of(context).primaryColor,
                 );
               },
@@ -524,15 +527,18 @@ class _DismissalActionsState extends State<_DismissalActions> {
         final activeRequest = snapshot.data;
 
         return StreamBuilder<List<AttendanceRecord>>(
-          stream: context.read<AttendanceRepository>().getStudentAttendance(widget.student.id),
+          stream: context.read<AttendanceRepository>().getStudentAttendance(
+            widget.student.id,
+          ),
           builder: (context, attendanceSnapshot) {
-            final childState = (attendanceSnapshot.data ?? []).resolveChildState();
-            
-            // Only hide the button if the child has already left or is absent.
-            // When the child is onBus, the parent SHOULD be able to request pickup.
+            final childState = (attendanceSnapshot.data ?? [])
+                .resolveChildState();
+
+            // Only hide the button if the child has already left, is absent, or is on the bus.
             if (activeRequest == null &&
                 (childState == ChildState.leftSchool ||
-                    childState == ChildState.absent)) {
+                    childState == ChildState.absent ||
+                    childState == ChildState.onBus)) {
               return const SizedBox.shrink();
             }
 
@@ -558,15 +564,26 @@ class _DismissalActionsState extends State<_DismissalActions> {
                           )
                         : ElevatedButton.icon(
                             onPressed: () async {
-                              final parent = context.read<AuthBloc>().state.user!;
-                              
+                              final parent = context
+                                  .read<AuthBloc>()
+                                  .state
+                                  .user!;
+
                               setState(() => _isRequesting = true);
-                              
+
                               // Logic to determine if child is on bus and which bus
-                              final attendanceRecords = attendanceSnapshot.data ?? [];
-                              final sortedRecords = attendanceRecords.toList()..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-                              final latestRecord = sortedRecords.isNotEmpty ? sortedRecords.first : null;
-                              final busId = childState == ChildState.onBus ? latestRecord?.busId : null;
+                              final attendanceRecords =
+                                  attendanceSnapshot.data ?? [];
+                              final sortedRecords = attendanceRecords.toList()
+                                ..sort(
+                                  (a, b) => b.timestamp.compareTo(a.timestamp),
+                                );
+                              final latestRecord = sortedRecords.isNotEmpty
+                                  ? sortedRecords.first
+                                  : null;
+                              final busId = childState == ChildState.onBus
+                                  ? latestRecord?.busId
+                                  : null;
 
                               final request = DismissalRequest(
                                 id: '',
@@ -584,19 +601,24 @@ class _DismissalActionsState extends State<_DismissalActions> {
                                 await context
                                     .read<DismissalRepository>()
                                     .requestDismissal(request);
-                                
+
                                 // Send push notification to routing target
                                 if (context.mounted) {
-                                  final fcmService = context.read<FcmV1Service>();
+                                  final fcmService = context
+                                      .read<FcmV1Service>();
                                   if (busId != null) {
                                     await fcmService.sendToBus(
                                       busId: busId,
                                       title: 'Pickup Request',
-                                      body: 'Parent of ${widget.student.name} is waiting at the stop.',
-                                      data: {'type': 'pickup', 'studentId': widget.student.id},
+                                      body:
+                                          'Parent of ${widget.student.name} is waiting at the stop.',
+                                      data: {
+                                        'type': 'pickup',
+                                        'studentId': widget.student.id,
+                                      },
                                     );
                                   } else {
-                                    // Optionally send to gate tokens if you have them, 
+                                    // Optionally send to gate tokens if you have them,
                                     // but usually Gate Officers listen to the live stream.
                                   }
                                 }
@@ -605,8 +627,9 @@ class _DismissalActionsState extends State<_DismissalActions> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        AppLocalizations.of(context)
-                                                ?.requestSentSuccessfully ??
+                                        AppLocalizations.of(
+                                              context,
+                                            )?.requestSentSuccessfully ??
                                             'تم إرسال طلب الانصراف بنجاح!',
                                         style: GoogleFonts.notoKufiArabic(),
                                       ),
@@ -730,7 +753,6 @@ class _DismissalActionsState extends State<_DismissalActions> {
   }
 }
 
-
 class _LiveStatusBadge extends StatelessWidget {
   final String studentId;
 
@@ -739,7 +761,9 @@ class _LiveStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<AttendanceRecord>>(
-      stream: context.read<AttendanceRepository>().getStudentAttendance(studentId),
+      stream: context.read<AttendanceRepository>().getStudentAttendance(
+        studentId,
+      ),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           debugPrint('Attendance Stream Error: ${snapshot.error}');
@@ -804,7 +828,7 @@ class _LiveStatusBadge extends StatelessWidget {
       case ChildState.absent:
         return 'Absent';
       case ChildState.unknown:
-        return AppLocalizations.of(context)?.notSpecified ?? 'Not Specified';
+        return AppLocalizations.of(context)?.pending ?? 'Pending';
     }
   }
 

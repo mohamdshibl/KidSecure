@@ -321,7 +321,7 @@ class _StudentStateBadge extends StatelessWidget {
       case ChildState.absent:
         return 'Absent';
       case ChildState.unknown:
-        return AppLocalizations.of(context)?.notSpecified ?? 'Not Specified';
+        return AppLocalizations.of(context)?.pending ?? 'Pending';
     }
   }
 

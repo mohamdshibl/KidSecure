@@ -476,6 +476,17 @@ class _StudentManifestItemState extends State<_StudentManifestItem> {
     return StreamBuilder<List<AttendanceRecord>>(
       stream: _attendanceStream,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
+          );
+        }
         final records = snapshot.data ?? [];
         final state = records.resolveChildState();
         final isOnBus = state == ChildState.onBus;
@@ -581,7 +592,7 @@ class _StudentManifestItemState extends State<_StudentManifestItem> {
         break;
       case ChildState.unknown:
         color = Colors.grey;
-        label = AppLocalizations.of(context)?.notSpecified ?? 'Not Specified';
+        label = AppLocalizations.of(context)?.pending ?? 'Pending';
         break;
     }
 
