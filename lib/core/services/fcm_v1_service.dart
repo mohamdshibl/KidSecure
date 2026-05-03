@@ -15,7 +15,7 @@ class FcmV1Service {
   static const String _firebaseDriverRole = 'driver';
   static const String _firebaseBusIdField = 'busId';
   static const String _firebaseFcmTokenField = 'fcmToken';
-  static const String _androidChannelId = 'kidsecure_critical_alerts_v1';
+  static const String _androidChannelId = 'kidsecure_critical_alerts_v3';
 
   late final String _projectId;
   late final String _clientEmail;
@@ -100,12 +100,13 @@ class FcmV1Service {
     }
   }
 
-  /// Sends a push notification to a single device token.
+  /// Sends a push notification to a single device token with exponential backoff.
   Future<bool> sendToToken({
     required String fcmToken,
     required String title,
     required String body,
     Map<String, String>? data,
+    int maxRetries = 3,
   }) async {
     final accessToken = await _getAccessToken();
     if (accessToken == null) {
@@ -113,57 +114,76 @@ class FcmV1Service {
       return false;
     }
 
-    try {
-      final fcmUrl =
-          'https://fcm.googleapis.com/v1/projects/$_projectId/messages:send';
-      final response = await http.post(
-        Uri.parse(fcmUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
+    final fcmUrl = 'https://fcm.googleapis.com/v1/projects/$_projectId/messages:send';
+    final payload = jsonEncode({
+      'message': {
+        'token': fcmToken,
+        // DO NOT set root 'notification' here. We use data messages
+        // so we can intercept them in FirebaseMessaging.onBackgroundMessage
+        // and show them manually with flutter_local_notifications for guaranteed sound!
+        'data': {
+          'title': title,
+          'body': body,
+          ...data ?? {},
         },
-        body: jsonEncode({
-          'message': {
-            'token': fcmToken,
-            // DO NOT set root 'notification' here. We use data messages
-            // so we can intercept them in FirebaseMessaging.onBackgroundMessage
-            // and show them manually with flutter_local_notifications for guaranteed sound!
-            'data': {
-              'title': title,
-              'body': body,
-              ...data ?? {},
-            },
-            'android': {
-              'priority': 'HIGH',
-              // Notice we omit the 'notification' block here to make it a Data message on Android.
-            },
-            'apns': {
-              'payload': {
-                'aps': {
-                  'alert': {'title': title, 'body': body},
-                  'sound': 'default',
-                  'badge': 1,
-                  'mutable-content': 1,
-                },
-              },
+        'android': {
+          'priority': 'HIGH',
+          // Notice we omit the 'notification' block here to make it a Data message on Android.
+        },
+        'apns': {
+          'headers': {
+            'apns-priority': '10',
+          },
+          'payload': {
+            'aps': {
+              'alert': {'title': title, 'body': body},
+              'sound': 'alert.wav',
+              'badge': 1,
+              'mutable-content': 1,
             },
           },
-        }),
-      );
+        },
+      },
+    });
 
-      if (response.statusCode != 200) {
+    for (int attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        final response = await http.post(
+          Uri.parse(fcmUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+          body: payload,
+        );
+
+        if (response.statusCode == 200) {
+          return true;
+        }
+
         if (kDebugMode) {
           print(
-            '[FcmV1Service] Send failed: ${response.statusCode} ${response.body}',
+            '[FcmV1Service] Send failed on attempt ${attempt + 1}: ${response.statusCode} ${response.body}',
           );
         }
-        return false;
+
+        // Stop retrying on permanent client errors except 429 Too Many Requests
+        if (response.statusCode >= 400 && response.statusCode < 500 && response.statusCode != 429) {
+          return false;
+        }
+      } catch (e) {
+        if (kDebugMode) print('[FcmV1Service] Error sending notification on attempt ${attempt + 1}: $e');
       }
-      return true;
-    } catch (e) {
-      if (kDebugMode) print('[FcmV1Service] Error sending notification: $e');
-      return false;
+
+      if (attempt < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s...
+        final delayMs = (1000 * (1 << attempt));
+        if (kDebugMode) print('[FcmV1Service] Retrying in ${delayMs}ms...');
+        await Future.delayed(Duration(milliseconds: delayMs));
+      }
     }
+
+    return false;
   }
 
   Future<bool> sendToParent({

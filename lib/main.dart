@@ -64,12 +64,18 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   
   final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
   
+  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const iosSettings = DarwinInitializationSettings();
+  const initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
+  await localNotifications.initialize(initSettings);
+  
   const androidChannel = AndroidNotificationChannel(
-    'kidsecure_critical_alerts_v1',
+    'kidsecure_critical_alerts_v3',
     'Critical Alerts',
     description: 'Important notifications requiring immediate attention.',
     importance: Importance.max,
     playSound: true,
+    sound: RawResourceAndroidNotificationSound('alert'),
     enableVibration: true,
   );
 
@@ -78,12 +84,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       ?.createNotificationChannel(androidChannel);
 
   final androidDetails = AndroidNotificationDetails(
-    'kidsecure_critical_alerts_v1',
+    'kidsecure_critical_alerts_v3',
     'Critical Alerts',
     channelDescription: 'Important notifications requiring immediate attention.',
     importance: Importance.max,
     priority: Priority.high,
     playSound: true,
+    sound: const RawResourceAndroidNotificationSound('alert'),
     enableVibration: true,
     enableLights: true,
   );
@@ -92,7 +99,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     presentAlert: true,
     presentBadge: true,
     presentSound: true,
-    sound: 'default',
+    sound: 'alert.wav',
   );
 
   final details = NotificationDetails(android: androidDetails, iOS: iosDetails);

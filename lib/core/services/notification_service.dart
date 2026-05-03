@@ -42,14 +42,15 @@ class NotificationService {
 
     // 2. Create High Importance Channel for Android
     const androidChannel = AndroidNotificationChannel(
-      'kidsecure_critical_alerts_v1',
+      'kidsecure_critical_alerts_v3',
       'Critical Alerts',
       description: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
       enableVibration: true,
       enableLights: true,
       playSound: true,
-      // Uses system default notification sound
+      sound: RawResourceAndroidNotificationSound('alert'),
+      // Uses custom alert.wav sound
     );
 
     await _localNotifications
@@ -119,12 +120,13 @@ class NotificationService {
     if (title == null && body == null) return;
 
     final androidDetails = AndroidNotificationDetails(
-      'kidsecure_critical_alerts_v1',
+      'kidsecure_critical_alerts_v3',
       'Critical Alerts',
       channelDescription: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
+      sound: const RawResourceAndroidNotificationSound('alert'),
       enableVibration: true,
       enableLights: true,
       ticker: 'ticker',
@@ -134,7 +136,7 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      sound: 'default',
+      sound: 'alert.wav',
     );
 
     final notificationDetails = NotificationDetails(
