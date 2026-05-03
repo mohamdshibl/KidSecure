@@ -16,7 +16,6 @@ class BusTrackingPage extends StatefulWidget {
 
 class _BusTrackingPageState extends State<BusTrackingPage> {
   GoogleMapController? _controller;
-  final Set<Marker> _markers = {};
   bool _mapError = false;
   late final Stream<BusLocationEntity> _busLocationStream;
 
@@ -85,8 +84,7 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
           final lng = data.longitude;
           final pos = LatLng(lat, lng);
 
-          _markers.clear();
-          _markers.add(
+          final currentMarkers = <Marker>{
             Marker(
               markerId: MarkerId(widget.busId),
               position: pos,
@@ -95,17 +93,21 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
               ),
               infoWindow: InfoWindow(title: 'Bus: ${widget.busId}'),
             ),
-          );
+          };
           
           if (_controller != null) {
-            _controller!.animateCamera(CameraUpdate.newLatLng(pos));
+            Future.microtask(() {
+              if (mounted) {
+                _controller?.animateCamera(CameraUpdate.newLatLng(pos));
+              }
+            });
           }
 
           return Stack(
             children: [
               _SafeGoogleMap(
                 position: pos,
-                markers: _markers,
+                markers: currentMarkers,
                 onMapCreated: (controller) => _controller = controller,
                 onError: () {
                   if (mounted) setState(() => _mapError = true);
