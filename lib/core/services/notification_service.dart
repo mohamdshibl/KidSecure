@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -42,7 +43,7 @@ class NotificationService {
 
     // 2. Create High Importance Channel for Android
     const androidChannel = AndroidNotificationChannel(
-      'kidsecure_critical_alerts_v3',
+      'kidsecure_critical_alerts_v4',
       'Critical Alerts',
       description: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
@@ -104,13 +105,17 @@ class NotificationService {
   }
 
   void _handleNotificationClick(String payload) {
-    // Convert payload string back to Map if needed, or handle directly
-    // This is called when a local notification (foreground) is clicked
     if (kDebugMode) {
       print('Local notification payload: $payload');
     }
-    // For simplicity, we assume payload is a map-like string or id
-    // You can use jsonDecode here if you passed a JSON string as payload
+    try {
+      final Map<String, dynamic> data = jsonDecode(payload);
+      _navigationStreamController.add(data);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error decoding notification payload: $e');
+      }
+    }
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
@@ -120,7 +125,7 @@ class NotificationService {
     if (title == null && body == null) return;
 
     final androidDetails = AndroidNotificationDetails(
-      'kidsecure_critical_alerts_v3',
+      'kidsecure_critical_alerts_v4',
       'Critical Alerts',
       channelDescription: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
@@ -149,7 +154,7 @@ class NotificationService {
       title,
       body,
       notificationDetails,
-      payload: message.data.toString(), // Optional: pass data as payload
+      payload: jsonEncode(message.data),
     );
   }
 

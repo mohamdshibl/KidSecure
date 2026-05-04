@@ -53,7 +53,7 @@
         <!-- Set default channel for Firebase so background notifications pop down and play sound -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="kidsecure_critical_alerts_v3" />
+            android:value="kidsecure_critical_alerts_v4" />
 
         <!-- Required for geolocator to run a foreground service -->
         <service

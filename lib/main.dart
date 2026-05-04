@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/services/fcm_v1_service.dart';
@@ -70,7 +71,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await localNotifications.initialize(initSettings);
   
   const androidChannel = AndroidNotificationChannel(
-    'kidsecure_critical_alerts_v3',
+    'kidsecure_critical_alerts_v4',
     'Critical Alerts',
     description: 'Important notifications requiring immediate attention.',
     importance: Importance.max,
@@ -84,7 +85,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       ?.createNotificationChannel(androidChannel);
 
   final androidDetails = AndroidNotificationDetails(
-    'kidsecure_critical_alerts_v3',
+    'kidsecure_critical_alerts_v4',
     'Critical Alerts',
     channelDescription: 'Important notifications requiring immediate attention.',
     importance: Importance.max,
@@ -113,7 +114,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       title,
       body,
       details,
-      payload: message.data.toString(),
+      payload: jsonEncode(message.data),
     );
   }
 }
@@ -159,7 +160,34 @@ void main() async {
   final fcmV1Service = FcmV1Service(
     projectId: 'kid-86bbc',
     clientEmail: 'firebase-adminsdk-fbsvc@kid-86bbc.iam.gserviceaccount.com',
-    privateKey: const String.fromEnvironment('FCM_PRIVATE_KEY', defaultValue: ''),
+    privateKey: '''-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQChtZvfmQBUDphp
+JQAleipvPvV4XOPk0GJAWGphyP5r4So8n/3ZrT24JSLOfuHlpkxQXvuOLXgkeqQ9
+Hc8uz0Rp14EoWT6+Su+7IoQ9xG/vGhnBWxREWjt+elJBtCdNjcyLK3LyspM3LrZ
+9++ieKiKkwcLAPNOWBo9pRRtLeNuR9OFKJU/0TjzPDGh9OEG7+tpcKF9CV3Kuw1f
+b5ZaHQIfeyymNk/cOnEKBrUktkT5TMMOpfM/VeplYmwzT4FgeHlbMAvdBaUdm70i
+95T4wPGo/dyaE4eLZCg0T8DXVke1Y0eZQTEMiXHZ/xHCy2nqJ1nPMwdJfZ1bYSOC
+Dcrc1CKhAgMBAAECggEAGmd5/SeRayg68Kgu/u+UsDd6g12/hGQWNuV48WCNUnYg
+nGePXpSwCDpgFZGYNxRRT6pCrvNzs5km6jVL8umrzg8jBeSIhYZcAz/CR4TgLAuK
+jI/RIOeT14+/7MGlHJZ2qsWq1yTUpXpBNEgMo93Jv17EfqJ4F+nA1yH2VOFySlZD
+mrmLSp4YEJ707+KNkq0DjYfOt2uIRQ7A7GJHLJjJ06P60QIs6v0Ra3EwQUTJymH4
+GRKjqZsg4Aj18limXv0WybtzXMNUxnp+z5MgjyvgnZ2PyRB1mvhu/uk3t09nj0Dm
+0fMC99J5ABnJ2N2LzGOofUTFrEb7S8LRROJWgW0NhQKBgQDOc93fgmoBBeX0cuxG
+lXkcr75c+dvJm5s7gqP6xqvVkxOAZBdCx7+y1c1gBPdY/Qqa2UJ+UkgSVAPu9tCk
+YmxKE979/Wzbit9yqPcPjx95kNtPDRVi0rQ+VxZnXFOht10b0g/50k4nuqfN9gTm
++jXWDvhQmcCfFaFK0BOkX/P+UwKBgQDIhMncOmRCdcTq2DSQFD79XLkUa/d/EePM
+JD+e87uo/FJGWLqNZiclcYYoEOmZWew20xI+l0uNyHSqkCPXz0qCak9s17WmSpPI
+STNas/L0uKdvgy2vtCovTeuPlOqDYkY8Kz4EOkTWzMOEhRe887x68vCaAGo0ujQu
+67yWTz20uwKBgQC3xXnNuEflyztLonThy7H4MBQSrTLQvluq2HphAzH4NihY1D/E
+aQwiA6ECBMmsg+pJtnUy/sk6z2CE+Vz1xsrAEfogOtMIhhCq/u6VAgCxdJlTP8E2
+q3pYN6swrIWhYRhXaGBiL6r0QHmYo5Lvi/AaME8naAWHVnixoJCrc+I8EwKBgQCX
+JUDjeEBKuGsOeppkYF56rIH2GswcRGfpYQlzz1UNM+TwkcFNBEtNthzh5p2uslGT
+odaGx5Rz8z29s5jQ+7e2RlxINvD9wAlVV5gWLr5cKTRMohy17KA/uARv3lhHYLSA
+djfxB9sL7p0SLyCNlUvlgWpLKzTjOdhL5fXpdyGUMQKBgQCxVqnVCr98aMsVGZyK
+zkXmkfhrSw2sFxh2Z5JVNhlqSkJEbx4WJdbmSoUEX5VEKZtzDwqJZRJ1UsOX0YnR
+AuJlDqH1RXRgnaD97uyug2y8IVpd7PskbuHQRkF3pugO9UBM/M8u3IWZHg9ElpKB
+j2E6s9oNzFcpq62yk7utvVFTyQ==
+-----END PRIVATE KEY-----''',
   );
 
   runApp(

@@ -15,7 +15,7 @@ class FcmV1Service {
   static const String _firebaseDriverRole = 'driver';
   static const String _firebaseBusIdField = 'busId';
   static const String _firebaseFcmTokenField = 'fcmToken';
-  static const String _androidChannelId = 'kidsecure_critical_alerts_v3';
+  static const String _androidChannelId = 'kidsecure_critical_alerts_v4';
 
   late final String _projectId;
   late final String _clientEmail;
@@ -36,7 +36,8 @@ class FcmV1Service {
   }) {
     _projectId = projectId;
     _clientEmail = clientEmail;
-    _privateKey = privateKey;
+    // Strip carriage returns which can break PEM parsing on Windows
+    _privateKey = privateKey.replaceAll('\r', '');
   }
 
   /// Returns a fresh OAuth2 access token using the service-account JWT flow.
@@ -53,7 +54,10 @@ class FcmV1Service {
     // Validate credentials
     if (_clientEmail.isEmpty || _privateKey.isEmpty) {
       if (kDebugMode) {
-        print('[FcmV1Service] ⚠️ FCM credentials not configured');
+        print('[FcmV1Service] ❌ ERROR: FCM credentials are MISSING.');
+        print('[FcmV1Service] Email: ${_clientEmail.isEmpty ? "EMPTY" : "OK"}');
+        print('[FcmV1Service] Key: ${_privateKey.isEmpty ? "EMPTY" : "OK"}');
+        print('[FcmV1Service] Make sure you are passing --dart-define=FCM_PRIVATE_KEY=... or hardcoding it for testing.');
       }
       return null;
     }
@@ -61,6 +65,16 @@ class FcmV1Service {
     try {
       final now = DateTime.now();
       final expiry = now.add(const Duration(hours: 1));
+
+      // Validate private key format
+      if (!_privateKey.contains('BEGIN PRIVATE KEY') || !_privateKey.contains('END PRIVATE KEY')) {
+        if (kDebugMode) {
+          print('[FcmV1Service] ❌ Private key format invalid - missing BEGIN/END markers');
+          print('[FcmV1Service] Key length: ${_privateKey.length}');
+          print('[FcmV1Service] First 100 chars: ${_privateKey.substring(0, _privateKey.length > 100 ? 100 : _privateKey.length)}');
+        }
+        return null;
+      }
 
       final jwt = JWT({
         'iss': _clientEmail,
@@ -85,6 +99,7 @@ class FcmV1Service {
         final data = jsonDecode(response.body);
         _cachedAccessToken = data['access_token'];
         _tokenExpiry = expiry;
+        if (kDebugMode) print('[FcmV1Service] ✅ Access token obtained successfully');
         return _cachedAccessToken;
       } else {
         if (kDebugMode) {
@@ -94,8 +109,13 @@ class FcmV1Service {
         }
         return null;
       }
-    } catch (e) {
-      if (kDebugMode) print('[FcmV1Service] Error getting access token: $e');
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('[FcmV1Service] ❌ Error getting access token: $e');
+        print('[FcmV1Service] Stack trace: $stackTrace');
+        print('[FcmV1Service] Private key length: ${_privateKey.length}');
+        print('[FcmV1Service] Client email: $_clientEmail');
+      }
       return null;
     }
   }
@@ -110,9 +130,11 @@ class FcmV1Service {
   }) async {
     final accessToken = await _getAccessToken();
     if (accessToken == null) {
-      if (kDebugMode) print('[FcmV1Service] No access token available');
+      if (kDebugMode) print('[FcmV1Service] ❌ ABORT: No access token available. Check your Private Key format.');
       return false;
     }
+
+    if (kDebugMode) print('[FcmV1Service] 🚀 Attempting to send to token: ${fcmToken.substring(0, 10)}...');
 
     final fcmUrl = 'https://fcm.googleapis.com/v1/projects/$_projectId/messages:send';
     final payload = jsonEncode({
@@ -128,7 +150,12 @@ class FcmV1Service {
         },
         'android': {
           'priority': 'HIGH',
-          // Notice we omit the 'notification' block here to make it a Data message on Android.
+          'notification': {
+            'channel_id': _androidChannelId,
+            'title': title,
+            'body': body,
+            'sound': 'alert',
+          },
         },
         'apns': {
           'headers': {
@@ -158,13 +185,15 @@ class FcmV1Service {
         );
 
         if (response.statusCode == 200) {
+          if (kDebugMode) print('[FcmV1Service] ✅ SUCCESS: Notification sent successfully!');
           return true;
         }
 
         if (kDebugMode) {
           print(
-            '[FcmV1Service] Send failed on attempt ${attempt + 1}: ${response.statusCode} ${response.body}',
+            '[FcmV1Service] ❌ FAIL on attempt ${attempt + 1}: ${response.statusCode}',
           );
+          print('[FcmV1Service] Response body: ${response.body}');
         }
 
         // Stop retrying on permanent client errors except 429 Too Many Requests
