@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/bus_location.dart';
 
 class BusLocationModel extends BusLocationEntity {
@@ -14,15 +15,19 @@ class BusLocationModel extends BusLocationEntity {
     final locationData = json['location'];
     final Map<dynamic, dynamic>? location = locationData is Map ? locationData.cast<dynamic, dynamic>() : null;
     
+    final tripActive = json['trip_active'] == true || 
+                  json['trip_active'] == 1 || 
+                  json['trip_active']?.toString().toLowerCase() == 'true';
+    
+    debugPrint('[BusModel] Parsed data for $busId: tripActive=$tripActive, location=$locationData');
+
     return BusLocationModel(
       busId: busId,
       driverId: json['driver_id']?.toString() ?? '',
       latitude: (location?['lat'] ?? 0.0).toDouble(),
       longitude: (location?['lng'] ?? 0.0).toDouble(),
       timestamp: location?['timestamp'] ?? 0,
-      tripActive: json['trip_active'] == true || 
-                  json['trip_active'] == 1 || 
-                  json['trip_active']?.toString().toLowerCase() == 'true',
+      tripActive: tripActive,
     );
   }
 

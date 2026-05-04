@@ -58,6 +58,7 @@ class BusTrackingRepositoryImpl implements BusTrackingRepository {
     debugPrint('Streaming bus location from path: buses/$normalizedBusId');
     return ref.onValue.map((event) {
       final value = event.snapshot.value;
+      debugPrint('[BusRepo] Received data for $busId: $value');
       if (value == null) {
         // Return an "offline" state instead of throwing an exception
         return BusLocationEntity(
