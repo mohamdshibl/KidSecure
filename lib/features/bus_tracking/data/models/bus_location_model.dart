@@ -11,13 +11,18 @@ class BusLocationModel extends BusLocationEntity {
   });
 
   factory BusLocationModel.fromJson(Map<dynamic, dynamic> json, String busId) {
+    final locationData = json['location'];
+    final Map<dynamic, dynamic>? location = locationData is Map ? locationData.cast<dynamic, dynamic>() : null;
+    
     return BusLocationModel(
       busId: busId,
-      driverId: json['driver_id'] ?? '',
-      latitude: (json['location']?['lat'] ?? 0.0).toDouble(),
-      longitude: (json['location']?['lng'] ?? 0.0).toDouble(),
-      timestamp: json['location']?['timestamp'] ?? 0,
-      tripActive: json['trip_active'] ?? false,
+      driverId: json['driver_id']?.toString() ?? '',
+      latitude: (location?['lat'] ?? 0.0).toDouble(),
+      longitude: (location?['lng'] ?? 0.0).toDouble(),
+      timestamp: location?['timestamp'] ?? 0,
+      tripActive: json['trip_active'] == true || 
+                  json['trip_active'] == 1 || 
+                  json['trip_active']?.toString().toLowerCase() == 'true',
     );
   }
 

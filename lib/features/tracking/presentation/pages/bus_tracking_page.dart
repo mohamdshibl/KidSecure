@@ -17,12 +17,24 @@ class BusTrackingPage extends StatefulWidget {
 class _BusTrackingPageState extends State<BusTrackingPage> {
   GoogleMapController? _controller;
   bool _mapError = false;
-  late final Stream<BusLocationEntity> _busLocationStream;
+  late Stream<BusLocationEntity> _busLocationStream;
 
   @override
   void initState() {
     super.initState();
+    debugPrint('Initializing BusTrackingPage for busId: ${widget.busId}');
     _busLocationStream = context.read<BusTrackingRepository>().streamBusLocation(widget.busId);
+  }
+
+  @override
+  void didUpdateWidget(BusTrackingPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.busId != widget.busId) {
+      debugPrint('BusId changed from ${oldWidget.busId} to ${widget.busId}, updating stream.');
+      setState(() {
+        _busLocationStream = context.read<BusTrackingRepository>().streamBusLocation(widget.busId);
+      });
+    }
   }
 
   @override
@@ -34,7 +46,9 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Live Bus Tracking', style: GoogleFonts.outfit()),
+        title: Text('Live Bus Tracking', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
       ),
       body: StreamBuilder<BusLocationEntity>(
         stream: _busLocationStream,
@@ -45,38 +59,17 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
 
           final data = snapshot.data;
           
+          if (snapshot.connectionState == ConnectionState.waiting && data == null) {
+            return _buildOfflineView(
+              context, 
+              isConnecting: true,
+            );
+          }
+
           if (data == null || !data.tripActive) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.directions_bus_rounded,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Bus is currently offline',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (snapshot.connectionState == ConnectionState.waiting)
-                    const _LoadingText()
-                  else
-                    Text(
-                      'Waiting for driver to start trip...',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: Colors.grey.withOpacity(0.8),
-                      ),
-                    ),
-                ],
-              ),
+            return _buildOfflineView(
+              context, 
+              isConnecting: false,
             );
           }
 
@@ -178,6 +171,63 @@ class _BusTrackingPageState extends State<BusTrackingPage> {
     );
   }
 
+  Widget _buildOfflineView(BuildContext context, {required bool isConnecting}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _PulsingBusIcon(),
+            const SizedBox(height: 32),
+            Text(
+              'Bus is currently offline',
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (isConnecting)
+              const _LoadingText()
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Waiting for the driver to start the scheduled trip. You\'ll see the live location here once they begin.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 48),
+            if (!isConnecting)
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    // Trigger a rebuild to re-initialize the stream
+                  });
+                },
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Refresh Status'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMapError() {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -262,6 +312,53 @@ class _SafeGoogleMapState extends State<_SafeGoogleMap> {
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
       compassEnabled: false,
+    );
+  }
+}
+
+class _PulsingBusIcon extends StatefulWidget {
+  @override
+  State<_PulsingBusIcon> createState() => _PulsingBusIconState();
+}
+
+class _PulsingBusIconState extends State<_PulsingBusIcon> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Theme.of(context).primaryColor.withOpacity(0.05),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.directions_bus_rounded,
+          size: 80,
+          color: Theme.of(context).primaryColor.withOpacity(0.6),
+        ),
+      ),
     );
   }
 }

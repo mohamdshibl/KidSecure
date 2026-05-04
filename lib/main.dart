@@ -149,7 +149,10 @@ void main() async {
   final dismissalRepository = FirebaseDismissalRepository();
   final notificationRepository = FirebaseNotificationRepository();
   final statsRepository = FirebaseStatsRepository();
-  final busTrackingRepository = BusTrackingRepositoryImpl();
+  // Replace with your actual Realtime Database URL from Firebase Console
+  final busTrackingRepository = BusTrackingRepositoryImpl(
+    databaseURL: 'https://kid-86bbc-default-rtdb.europe-west1.firebasedatabase.app/',
+  );
   
   // Initialize FCM V1 Service with credentials
   // TODO: Load these from secure configuration (environment variables or secure storage)
