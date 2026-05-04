@@ -115,6 +115,18 @@ class FirebaseAttendanceRepository implements AttendanceRepository {
   }
 
   @override
+  Stream<StudentModel?> getStudent(String studentId) {
+    return _firestore
+        .collection('students')
+        .doc(studentId)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) return null;
+      return StudentModel.fromMap(doc.data()!, doc.id);
+    });
+  }
+
+  @override
   Future<List<StudentModel>> searchStudents(String query) async {
     if (query.isEmpty) return [];
 

@@ -18,40 +18,58 @@ class StudentDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          student.name,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          if (context.read<AuthBloc>().state.user?.role == UserRole.admin)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () =>
-                  context.push('/admin/edit-student', extra: student),
+    return StreamBuilder<StudentModel?>(
+      stream: context.read<AttendanceRepository>().getStudent(student.id),
+      initialData: student,
+      builder: (context, snapshot) {
+        final currentStudent = snapshot.data ?? student;
+        
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            title: Text(
+              currentStudent.name,
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            _buildProfileSection(context),
-            const SizedBox(height: 32),
-            _buildQrSection(context),
-            const SizedBox(height: 32),
-            _buildInfoCard(context),
-            const SizedBox(height: 40),
-            _buildActionButtons(context),
-          ],
-        ),
-      ),
+            actions: [
+              Builder(
+                builder: (context) {
+                  final user = context.watch<AuthBloc>().state.user;
+                  final isAdmin = user?.role == UserRole.admin;
+                  final isParent = user?.role == UserRole.parent && user?.id == currentStudent.parentId;
+                  
+                  if (isAdmin || isParent) {
+                    return IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () =>
+                          context.push('/admin/edit-student', extra: currentStudent),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                _buildProfileSection(context, currentStudent),
+                const SizedBox(height: 32),
+                _buildQrSection(context, currentStudent),
+                const SizedBox(height: 32),
+                _buildInfoCard(context, currentStudent),
+                const SizedBox(height: 40),
+                _buildActionButtons(context, currentStudent),
+              ],
+            ),
+          ),
+        );
+      }
     );
   }
 
-  Widget _buildProfileSection(BuildContext context) {
+  Widget _buildProfileSection(BuildContext context, StudentModel student) {
     return Column(
       children: [
         CircleAvatar(
@@ -81,7 +99,7 @@ class StudentDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildQrSection(BuildContext context) {
+  Widget _buildQrSection(BuildContext context, StudentModel student) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -133,7 +151,7 @@ class StudentDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context) {
+  Widget _buildInfoCard(BuildContext context, StudentModel student) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -159,7 +177,7 @@ class StudentDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, StudentModel student) {
     return Column(
       children: [
         if (student.busId != null) ...[
@@ -199,33 +217,35 @@ class StudentDetailsPage extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton.icon(
-            onPressed: () => _showDeleteConfirmation(context),
-            icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-            label: Text(
-              'Delete Profile',
-              style: GoogleFonts.inter(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
+        if (context.read<AuthBloc>().state.user?.role == UserRole.admin) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () => _showDeleteConfirmation(context, student),
+              icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+              label: Text(
+                'Delete Profile',
+                style: GoogleFonts.inter(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.red.withOpacity(0.2)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.red.withOpacity(0.2)),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }
 
-  Future<void> _showDeleteConfirmation(BuildContext context) async {
+  Future<void> _showDeleteConfirmation(BuildContext context, StudentModel student) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
