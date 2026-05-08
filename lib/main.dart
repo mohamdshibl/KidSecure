@@ -71,7 +71,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await localNotifications.initialize(initSettings);
   
   const androidChannel = AndroidNotificationChannel(
-    'kidsecure_critical_alerts_v4',
+    'kidsecure_critical_alerts_v6',
     'Critical Alerts',
     description: 'Important notifications requiring immediate attention.',
     importance: Importance.max,
@@ -85,7 +85,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       ?.createNotificationChannel(androidChannel);
 
   final androidDetails = AndroidNotificationDetails(
-    'kidsecure_critical_alerts_v4',
+    'kidsecure_critical_alerts_v6',
     'Critical Alerts',
     channelDescription: 'Important notifications requiring immediate attention.',
     importance: Importance.max,
@@ -187,7 +187,7 @@ djfxB9sL7p0SLyCNlUvlgWpLKzTjOdhL5fXpdyGUMQKBgQCxVqnVCr98aMsVGZyK
 zkXmkfhrSw2sFxh2Z5JVNhlqSkJEbx4WJdbmSoUEX5VEKZtzDwqJZRJ1UsOX0YnR
 AuJlDqH1RXRgnaD97uyug2y8IVpd7PskbuHQRkF3pugO9UBM/M8u3IWZHg9ElpKB
 j2E6s9oNzFcpq62yk7utvVFTyQ==
------END PRIVATE KEY-----''',
+-----END PRIVATE KEY-----'''.trim(),
   );
 
   runApp(

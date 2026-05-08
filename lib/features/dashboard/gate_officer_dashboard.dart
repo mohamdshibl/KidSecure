@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../auth/presentation/bloc/auth_bloc.dart';
-import '../auth/presentation/bloc/auth_event.dart';
-import '../attendance/domain/models/dismissal_request.dart';
-import '../attendance/domain/repositories/dismissal_repository.dart';
-import '../attendance/domain/repositories/attendance_repository.dart';
-import '../attendance/domain/models/student_model.dart';
-import '../attendance/domain/models/attendance_record.dart';
-import '../../core/theme/theme_cubit.dart';
-import '../../core/localization/language_cubit.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:kidsecure/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:kidsecure/features/auth/presentation/bloc/auth_event.dart';
+import 'package:kidsecure/features/attendance/domain/models/dismissal_request.dart';
+import 'package:kidsecure/features/attendance/domain/repositories/dismissal_repository.dart';
+import 'package:kidsecure/features/attendance/domain/repositories/attendance_repository.dart';
+import 'package:kidsecure/features/attendance/domain/models/student_model.dart';
+import 'package:kidsecure/features/attendance/domain/models/attendance_record.dart';
+import 'package:kidsecure/core/theme/theme_cubit.dart';
+import 'package:kidsecure/core/localization/language_cubit.dart';
+import 'package:kidsecure/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
-import '../../core/services/fcm_v1_service.dart';
-import '../notifications/domain/repositories/notification_repository.dart';
-import '../notifications/domain/models/notification_model.dart';
+import 'package:kidsecure/core/services/fcm_v1_service.dart';
+import 'package:kidsecure/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:kidsecure/features/notifications/domain/models/notification_model.dart';
 
 class GateOfficerDashboard extends StatefulWidget {
   const GateOfficerDashboard({super.key});
@@ -532,9 +532,12 @@ class _DismissalCard extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () async {
-                    // Extract repositories before async gap to avoid context.mounted issues
+                    // Extract all necessary references before any async gap
                     final dismissalRepo = context.read<DismissalRepository>();
                     final attendanceRepo = context.read<AttendanceRepository>();
+                    final notificationRepo = context.read<NotificationRepository>();
+                    final fcmService = context.read<FcmV1Service>();
+                    final localizations = AppLocalizations.of(context);
                     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
                     try {
@@ -553,6 +556,44 @@ class _DismissalCard extends StatelessWidget {
                         request.id,
                         DismissalStatus.completed,
                       );
+
+                      // 3. Send Notification to Parent
+                      final title = localizations?.schoolGateUpdate ?? 'اكتمل الانصراف';
+                      final body = localizations?.leftSchoolNotification(request.studentName) ?? 
+                          'تم استلام ${request.studentName} من المدرسة.';
+
+                      final notification = AppNotification(
+                        id: const Uuid().v4(),
+                        title: title,
+                        body: body,
+                        timestamp: DateTime.now(),
+                        isRead: false,
+                        type: NotificationType.attendance,
+                        parentId: request.parentId,
+                        studentId: request.studentId,
+                      );
+
+                      notificationRepo.sendNotification(notification);
+                      final success = await fcmService.sendToParent(
+                        parentId: request.parentId,
+                        title: title,
+                        body: body,
+                        data: {'type': 'check_out', 'studentId': request.studentId},
+                      );
+
+                      if (context.mounted) {
+                        if (!success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Push Notification Failed (No token or FCM error)'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                        }
+                        scaffoldMessenger.showSnackBar(
+                          const SnackBar(content: Text('Dismissal Completed Successfully')),
+                        );
+                      }
                     } catch (e) {
                       scaffoldMessenger.showSnackBar(
                         SnackBar(content: Text('Error: $e')),

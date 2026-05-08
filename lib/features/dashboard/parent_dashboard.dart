@@ -75,13 +75,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 _HomeView(
                   user: user,
                   students: students,
-                  onTrackBus: () => setState(() => _selectedIndex = 2),
                   onRefresh: _onRefresh,
                 ),
                 const NotificationsHistoryPage(),
-                busId != null
-                    ? BusTrackingPage(busId: busId)
-                    : _NoBusAssigned(),
                 _ProfileView(user: user),
               ],
             ),
@@ -158,10 +154,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
             label: AppLocalizations.of(context)?.notifications ?? 'التنبيهات',
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.map_rounded),
-            label: AppLocalizations.of(context)?.tracking ?? 'تتبع',
-          ),
-          BottomNavigationBarItem(
             icon: const Icon(Icons.person_rounded),
             label: AppLocalizations.of(context)?.profile ?? 'الملف',
           ),
@@ -174,12 +166,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
 class _HomeView extends StatelessWidget {
   final dynamic user;
   final List<StudentModel> students;
-  final VoidCallback onTrackBus;
   final RefreshCallback onRefresh;
   const _HomeView({
     required this.user,
     required this.students,
-    required this.onTrackBus,
     required this.onRefresh,
   });
 
@@ -221,7 +211,7 @@ class _HomeView extends StatelessWidget {
               else
                 ...students.map((student) => _StudentCard(student: student)),
               const SizedBox(height: 32),
-              _QuickActions(onTrackBus: onTrackBus),
+              _QuickActions(),
             ],
           ),
         ),
@@ -916,8 +906,7 @@ class _NoBusAssigned extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
-  final VoidCallback onTrackBus;
-  const _QuickActions({required this.onTrackBus});
+  const _QuickActions();
 
   @override
   Widget build(BuildContext context) {
@@ -935,12 +924,6 @@ class _QuickActions extends StatelessWidget {
         const SizedBox(height: 16),
         Row(
           children: [
-            _ActionItem(
-              icon: Icons.bus_alert_rounded,
-              label: AppLocalizations.of(context)?.trackBus ?? 'تتبع الحافلة',
-              color: Colors.blue,
-              onTap: onTrackBus,
-            ),
             const SizedBox(width: 16),
             _ActionItem(
               icon: Icons.history_rounded,

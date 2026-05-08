@@ -3,12 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import '../../domain/repositories/attendance_repository.dart';
-import '../../domain/models/attendance_record.dart';
-import '../../domain/models/dismissal_request.dart';
-import '../../domain/repositories/dismissal_repository.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/domain/user_model.dart';
+import 'package:kidsecure/features/attendance/domain/repositories/attendance_repository.dart';
+import 'package:kidsecure/features/attendance/domain/models/attendance_record.dart';
+import 'package:kidsecure/features/attendance/domain/models/dismissal_request.dart';
+import 'package:kidsecure/features/attendance/domain/repositories/dismissal_repository.dart';
+import 'package:kidsecure/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:kidsecure/features/auth/domain/user_model.dart';
+import 'package:kidsecure/features/attendance/domain/models/student_model.dart';
+import 'package:kidsecure/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:kidsecure/features/notifications/domain/models/notification_model.dart';
+import 'package:kidsecure/core/services/fcm_v1_service.dart';
+import 'package:uuid/uuid.dart';
 import 'package:kidsecure/l10n/app_localizations.dart';
 
 class QrScannerPage extends StatefulWidget {
@@ -130,7 +135,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
     }
   }
 
-  Future<void> _showAttendanceDialog(BuildContext context, dynamic student) async {
+  Future<void> _showAttendanceDialog(BuildContext context, StudentModel student) async {
     await showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -211,7 +216,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () => _handleDismissal(context, activeRequest),
+                          onPressed: () => _handleDismissal(context, activeRequest, student),
                           icon: const Icon(Icons.check_circle_rounded),
                           label: const Text('Complete Dismissal'),
                           style: ElevatedButton.styleFrom(
@@ -238,7 +243,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
                   child: ElevatedButton.icon(
                     onPressed: () => _register(
                       context,
-                      student.id,
+                      student,
                       AttendanceStatus.checkIn,
                     ),
                     icon: const Icon(Icons.login_rounded),
@@ -261,7 +266,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
                   child: ElevatedButton.icon(
                     onPressed: () => _register(
                       context,
-                      student.id,
+                      student,
                       AttendanceStatus.checkOut,
                     ),
                     icon: const Icon(Icons.logout_rounded),
@@ -287,15 +292,18 @@ class _QrScannerPageState extends State<QrScannerPage> {
     );
   }
 
-  Future<void> _handleDismissal(BuildContext context, DismissalRequest request) async {
-    Navigator.pop(context); // Close bottom sheet
-    
+  Future<void> _handleDismissal(BuildContext context, DismissalRequest request, StudentModel student) async {
     final dismissalRepo = context.read<DismissalRepository>();
     final attendanceRepo = context.read<AttendanceRepository>();
+    final notificationRepo = context.read<NotificationRepository>();
+    final fcmService = context.read<FcmV1Service>();
+    final localizations = AppLocalizations.of(context);
+    final user = context.read<AuthBloc>().state.user;
+    
+    Navigator.pop(context); // Close bottom sheet
     
     try {
       // 1. Record checkout
-      final user = context.read<AuthBloc>().state.user;
       final record = AttendanceRecord(
         id: '',
         studentId: request.studentId,
@@ -310,33 +318,96 @@ class _QrScannerPageState extends State<QrScannerPage> {
       // 2. Complete dismissal
       await dismissalRepo.updateDismissalStatus(request.id, DismissalStatus.completed);
 
-      if (context.mounted) {
-        _showResult(context, 'Dismissal Completed Successfully', Colors.green);
-      }
+      // 3. Send Notification to Parent
+      final title = localizations?.schoolGateUpdate ?? 'اكتمل الانصراف';
+      final body = localizations?.leftSchoolNotification(student.name) ?? 
+          'تم استلام ${student.name} من المدرسة.';
+
+      final notification = AppNotification(
+        id: const Uuid().v4(),
+        title: title,
+        body: body,
+        timestamp: DateTime.now(),
+        isRead: false,
+        type: NotificationType.attendance,
+        parentId: student.parentId,
+        studentId: student.id,
+      );
+
+      notificationRepo.sendNotification(notification);
+      fcmService.sendToParent(
+        parentId: student.parentId,
+        title: title,
+        body: body,
+        data: {'type': 'check_out', 'studentId': student.id},
+      );
+
+      _showResult(context, 'Dismissal Completed Successfully', Colors.green);
     } catch (e) {
-      if (context.mounted) _showResult(context, 'Error: $e', Colors.red);
+      _showResult(context, 'Error: $e', Colors.red);
     }
   }
 
   Future<void> _register(
     BuildContext context,
-    String studentId,
+    StudentModel student,
     AttendanceStatus status,
   ) async {
+    final attendanceRepo = context.read<AttendanceRepository>();
+    final notificationRepo = context.read<NotificationRepository>();
+    final fcmService = context.read<FcmV1Service>();
+    final localizations = AppLocalizations.of(context);
+    final user = context.read<AuthBloc>().state.user;
+
     Navigator.pop(context); // Close bottom sheet
 
-    final user = context.read<AuthBloc>().state.user;
     final record = AttendanceRecord(
       id: '', // Firestore auto-id
-      studentId: studentId,
+      studentId: student.id,
       timestamp: DateTime.now(),
       status: status,
       busId: user?.role == UserRole.driver ? user?.busId : null,
       officerId: user?.id,
     );
 
-    await context.read<AttendanceRepository>().recordAttendance(record);
+    await attendanceRepo.recordAttendance(record);
+
+    final title = localizations?.schoolGateUpdate ?? 'تحديث الحضور';
+    final body = status == AttendanceStatus.checkIn
+        ? (localizations?.enteredSchool(student.name) ?? 'تم تسجيل دخول ${student.name} للمدرسة.')
+        : (localizations?.leftSchoolNotification(student.name) ?? 'تم تسجيل خروج ${student.name} من المدرسة.');
+
+    final notification = AppNotification(
+      id: const Uuid().v4(),
+      title: title,
+      body: body,
+      timestamp: DateTime.now(),
+      isRead: false,
+      type: NotificationType.attendance,
+      parentId: student.parentId,
+      studentId: student.id,
+    );
+
+    notificationRepo.sendNotification(notification);
+    final success = await fcmService.sendToParent(
+      parentId: student.parentId,
+      title: title,
+      body: body,
+      data: {
+        'type': status == AttendanceStatus.checkIn ? 'check_in' : 'check_out',
+        'studentId': student.id,
+      },
+    );
+
     if (context.mounted) {
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Push Notification Failed (No token or FCM error)'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
       HapticFeedback.heavyImpact(); // Stronger feedback on success
       _showResult(
         context,

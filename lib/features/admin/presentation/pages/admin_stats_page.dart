@@ -105,8 +105,6 @@ class _StatsView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _AttendanceChart(trend: stats.attendanceTrend),
-          const SizedBox(height: 32),
-          _DismissalSummary(pending: stats.pendingDismissals),
         ],
       ),
     );
@@ -221,65 +219,4 @@ class _AttendanceChart extends StatelessWidget {
   }
 }
 
-class _DismissalSummary extends StatelessWidget {
-  final int pending;
-  const _DismissalSummary({required this.pending});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.orange.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.pending_actions_rounded,
-            color: Colors.orange,
-            size: 32,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pending Dismissals',
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  'There are $pending active requests waiting for gate officer approval.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (pending > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                pending.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}

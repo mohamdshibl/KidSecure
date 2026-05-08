@@ -43,7 +43,7 @@ class NotificationService {
 
     // 2. Create High Importance Channel for Android
     const androidChannel = AndroidNotificationChannel(
-      'kidsecure_critical_alerts_v4',
+      'kidsecure_critical_alerts_v6',
       'Critical Alerts',
       description: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
@@ -125,7 +125,7 @@ class NotificationService {
     if (title == null && body == null) return;
 
     final androidDetails = AndroidNotificationDetails(
-      'kidsecure_critical_alerts_v4',
+      'kidsecure_critical_alerts_v6',
       'Critical Alerts',
       channelDescription: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
