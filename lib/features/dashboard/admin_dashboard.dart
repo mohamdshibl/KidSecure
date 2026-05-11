@@ -11,6 +11,7 @@ import '../../core/theme/theme_cubit.dart';
 import '../../core/localization/language_cubit.dart';
 import '../../l10n/app_localizations.dart';
 import '../admin/presentation/widgets/broadcast_banner.dart';
+import '../../core/services/notification_service.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -570,6 +571,16 @@ class _ProfileView extends StatelessWidget {
               ),
             );
           },
+        ),
+        _SettingsTile(
+          icon: Icons.volume_up_rounded,
+          label: 'Test Notification Sound',
+          trailing: IconButton(
+            icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.blue),
+            onPressed: () {
+              context.read<NotificationService>().triggerTestNotification();
+            },
+          ),
         ),
       ],
     );

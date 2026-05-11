@@ -18,7 +18,7 @@ class FcmV1Service {
   static const String _firebaseDriverRole = 'driver';
   static const String _firebaseBusIdField = 'busId';
   static const String _firebaseFcmTokenField = 'fcmToken';
-  static const String _androidChannelId = 'kidsecure_critical_alerts_v6';
+  static const String _androidChannelId = 'kidsecure_critical_alerts_v8';
 
   // ── FCM error codes that mean the token is permanently dead ────────────────
   static const _unrecoverableErrors = {
@@ -47,7 +47,7 @@ class FcmV1Service {
   }) {
     _projectId = projectId;
     _clientEmail = clientEmail;
-    _privateKey = _normalizePrivateKey(privateKey);
+    _privateKey = _normalizePem(privateKey);
   }
 
   // ── Private key normalisation ───────────────────────────────────────────────
@@ -57,65 +57,52 @@ class FcmV1Service {
   ///
   /// Handles:
   ///   • Literal \n sequences produced by --dart-define / shell quoting
-  ///   • Windows-style \r\n line endings
-  ///   • A single flat line with no internal newlines at all
-  ///   • Leading/trailing whitespace
-  ///   • Stray newlines or spaces within base64 content
-  ///   • Invalid base64 characters
-  static String _normalizePrivateKey(String raw) {
-    // Step 1 – convert literal escaped sequences into real line breaks.
-    String key = raw.replaceAll(RegExp(r'\\+n'), '\n');
-    key = key.replaceAll(RegExp(r'\\+r'), '\r');
+  static String _normalizePem(String key) {
+    // 1. Convert literal \n sequences (from JSON keys) to real newlines, then strip all whitespace
+    String cleanKey = key
+        .replaceAll(r'\n', '\n')
+        .replaceAll(r'\r', '\r')
+        .replaceAll(RegExp(r'\s+'), '');
 
-    // Step 2 – strip all carriage returns and newlines.
-    key = key.replaceAll('\r', '').replaceAll('\n', '');
-
-    // Step 3 – trim surrounding whitespace.
-    key = key.trim();
-
-    // Step 4 – extract everything between the markers, removing any content
-    // that's not part of the base64 payload.
     const beginMarker = '-----BEGIN PRIVATE KEY-----';
     const endMarker = '-----END PRIVATE KEY-----';
 
-    final beginIdx = key.indexOf(beginMarker);
-    final endIdx = key.indexOf(endMarker);
+    // Markers without spaces for matching the stripped key
+    const cleanBegin = '-----BEGINPRIVATEKEY-----';
+    const cleanEnd = '-----ENDPRIVATEKEY-----';
 
-    if (beginIdx == -1 || endIdx == -1 || beginIdx >= endIdx) {
-      // Invalid structure, return as-is and let the RSAPrivateKey
-      // constructor fail with a clear error.
-      if (kDebugMode) {
-        print('[FcmV1Service] Warning: Invalid PEM structure (no markers)');
-      }
-      return key;
+    // 2. Extract raw Base64 content
+    String base64Content;
+    final start = cleanKey.indexOf(cleanBegin);
+    final end   = cleanKey.indexOf(cleanEnd);
+
+    if (start != -1 && end != -1 && start < end) {
+      base64Content = cleanKey.substring(start + cleanBegin.length, end);
+    } else {
+      // Fallback – try to remove the dashed markers with their spaces intact
+      base64Content = key
+          .replaceAll(RegExp(r'\s+'), '')
+          .replaceAll('-----BEGINPRIVATEKEY-----', '')
+          .replaceAll('-----ENDPRIVATEKEY-----',   '');
     }
 
-    // Extract base64 content between markers.
-    String base64Content = key.substring(beginIdx + beginMarker.length, endIdx);
-
-    // Remove ALL whitespace and non-base64 characters.
-    // Valid base64: [a-zA-Z0-9+/=]
-    base64Content = base64Content.replaceAll(RegExp(r'[^a-zA-Z0-9+/=]'), '');
+    // 3. Keep only valid Base64 characters
+    base64Content = base64Content.replaceAll(RegExp(r'[^A-Za-z0-9+/=]'), '');
 
     if (kDebugMode) {
-      print(
-        '[FcmV1Service] Extracted ${base64Content.length} bytes of base64 content',
-      );
+      print('[FcmV1Service] Base64 length after clean: ${base64Content.length}');
     }
 
-    // Reconstruct PEM with proper line breaks every 64 characters.
-    final buffer = StringBuffer(beginMarker);
-    buffer.write('\n');
-
-    for (int i = 0; i < base64Content.length; i += 64) {
-      final end = (i + 64).clamp(0, base64Content.length);
-      buffer.write(base64Content.substring(i, end));
-      buffer.write('\n');
+    // 4. Re-chunk into 64-character lines – dart_jsonwebtoken's PEM parser
+    //    requires this exact RFC-7468 format.
+    final buf = StringBuffer()..writeln(beginMarker);
+    for (var i = 0; i < base64Content.length; i += 64) {
+      buf.writeln(base64Content.substring(
+          i, (i + 64).clamp(0, base64Content.length)));
     }
+    buf.write(endMarker);
 
-    buffer.write(endMarker);
-
-    return buffer.toString();
+    return buf.toString();
   }
 
   // ── OAuth2 access token ─────────────────────────────────────────────────────
@@ -164,8 +151,8 @@ class FcmV1Service {
         'exp': expiry.millisecondsSinceEpoch ~/ 1000,
       });
 
-      // _privateKey is already normalised — pass it directly.
-      final signedJwt = jwt.sign(RSAPrivateKey(_privateKey));
+      // Sign with RSA-SHA256 (RS256) — required for service account JWTs
+      final signedJwt = jwt.sign(RSAPrivateKey(_privateKey), algorithm: JWTAlgorithm.RS256);
 
       final response = await http.post(
         Uri.parse('https://oauth2.googleapis.com/token'),
@@ -232,25 +219,33 @@ class FcmV1Service {
     final payload = jsonEncode({
       'message': {
         'token': fcmToken,
-        'notification': {'title': title, 'body': body},
-        'data': {'title': title, 'body': body, ...?data},
+        'data': {
+          'title': title,
+          'body': body,
+          'type': 'broadcast',
+          ...?data,
+        },
         'android': {
           'priority': 'HIGH',
           'notification': {
             'channel_id': _androidChannelId,
             'title': title,
             'body': body,
-            'sound': 'alert',
+            'notification_priority': 'PRIORITY_MAX',
+            // No custom sound = use device default
           },
         },
         'apns': {
-          'headers': {'apns-priority': '10'},
+          'headers': {
+            'apns-priority': '10',
+            'apns-push-type': 'alert',
+          },
           'payload': {
             'aps': {
               'alert': {'title': title, 'body': body},
-              'sound': 'alert.wav',
+              'sound': 'default',
               'badge': 1,
-              'mutable-content': 1,
+              'content-available': 1,
             },
           },
         },
@@ -304,6 +299,85 @@ class FcmV1Service {
         final delayMs = 1000 * (1 << attempt); // 1s → 2s → 4s
         _log('⏳ Retrying in ${delayMs}ms…');
         await Future.delayed(Duration(milliseconds: delayMs));
+      }
+    }
+
+    return false;
+  }
+
+  /// Sends a push notification to a Firebase topic (e.g. 'all_users').
+  Future<bool> sendToTopic({
+    required String topic,
+    required String title,
+    required String body,
+    Map<String, String>? data,
+    int maxRetries = 3,
+  }) async {
+    final accessToken = await _getAccessToken();
+    if (accessToken == null) return false;
+
+    _log('🚀 Sending to topic: $topic');
+
+    final fcmUrl = 'https://fcm.googleapis.com/v1/projects/$_projectId/messages:send';
+
+    final payload = jsonEncode({
+      'message': {
+        'topic': topic,
+        'data': {
+          'title': title,
+          'body': body,
+          'type': 'broadcast',
+          ...?data,
+        },
+        'android': {
+          'priority': 'HIGH',
+          'notification': {
+            'channel_id': _androidChannelId,
+            'title': title,
+            'body': body,
+            'notification_priority': 'PRIORITY_MAX',
+            // No custom sound = use device default
+          },
+        },
+        'apns': {
+          'headers': {
+            'apns-priority': '10',
+            'apns-push-type': 'alert',
+          },
+          'payload': {
+            'aps': {
+              'alert': {'title': title, 'body': body},
+              'sound': 'default',
+              'badge': 1,
+            },
+          },
+        },
+      },
+    });
+
+    for (int attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        final response = await http.post(
+          Uri.parse(fcmUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+          body: payload,
+        );
+
+        if (response.statusCode == 200) {
+          _log('✅ Notification sent to topic: $topic');
+          return true;
+        }
+
+        _log('❌ Topic attempt ${attempt + 1} failed: ${response.statusCode} - ${response.body}');
+      } catch (e) {
+        _log('❌ Exception on topic attempt ${attempt + 1}: $e');
+      }
+
+      if (attempt < maxRetries) {
+        await Future.delayed(Duration(milliseconds: 1000 * (1 << attempt)));
       }
     }
 

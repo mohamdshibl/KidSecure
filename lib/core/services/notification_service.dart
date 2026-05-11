@@ -41,17 +41,16 @@ class NotificationService {
       },
     );
 
-    // 2. Create High Importance Channel for Android
+    // 2. Create High Importance Channel for Android (v8 = default system sound)
     const androidChannel = AndroidNotificationChannel(
-      'kidsecure_critical_alerts_v6',
-      'Critical Alerts',
+      'kidsecure_critical_alerts_v8',
+      'KidSecure Alerts',
       description: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
       enableVibration: true,
       enableLights: true,
       playSound: true,
-      sound: RawResourceAndroidNotificationSound('alert'),
-      // Uses custom alert.wav sound
+      // No custom sound = use device default notification sound
     );
 
     await _localNotifications
@@ -67,6 +66,9 @@ class NotificationService {
       provisional: false,
     );
 
+    // Subscribe to general topic for broadcasts
+    await _fcm.subscribeToTopic('all_users');
+
     if (kDebugMode) {
       print('User granted permission: ${settings.authorizationStatus}');
     }
@@ -78,6 +80,11 @@ class NotificationService {
       if (kDebugMode) {
         print('Foreground message received: ${message.data}');
       }
+      // Skip broadcast messages — FCM already shows the system notification
+      // via the topic delivery. Showing a local one too would cause duplicates.
+      final type = message.data['type'] as String? ?? '';
+      if (type == 'broadcast') return;
+
       if (message.notification != null || message.data.containsKey('title')) {
         _showLocalNotification(message);
       }
@@ -125,13 +132,13 @@ class NotificationService {
     if (title == null && body == null) return;
 
     final androidDetails = AndroidNotificationDetails(
-      'kidsecure_critical_alerts_v6',
-      'Critical Alerts',
+      'kidsecure_critical_alerts_v8',
+      'KidSecure Alerts',
       channelDescription: 'Important notifications requiring immediate attention.',
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
-      sound: const RawResourceAndroidNotificationSound('alert'),
+      // No custom sound = use device default notification sound
       enableVibration: true,
       enableLights: true,
       ticker: 'ticker',
@@ -155,6 +162,41 @@ class NotificationService {
       body,
       notificationDetails,
       payload: jsonEncode(message.data),
+    );
+  }
+
+  /// Manually trigger a test notification to verify sounds and channels
+  Future<void> triggerTestNotification() async {
+    const androidDetails = AndroidNotificationDetails(
+      'kidsecure_critical_alerts_v8',
+      'KidSecure Alerts',
+      channelDescription: 'Important notifications requiring immediate attention.',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      // No custom sound = use device default notification sound
+      enableVibration: true,
+      enableLights: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      sound: 'alert.wav',
+    );
+
+    const notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _localNotifications.show(
+      999,
+      'Test Alert',
+      'If you hear this sound, your alert.wav is working correctly!',
+      notificationDetails,
+      payload: jsonEncode({'type': 'test'}),
     );
   }
 

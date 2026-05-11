@@ -60,18 +60,25 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  debugPrint('Background FCM message received: ${message.messageId}');
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (_) {
+    // Already initialized
+  }
+
+  // If the message already has a notification object, the OS might have already shown it.
+  // We only show a manual local notification if it's a data-only message or we want to force our custom channel.
   
   final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
   
   const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
   const iosSettings = DarwinInitializationSettings();
-  const initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
-  await localNotifications.initialize(initSettings);
+  await localNotifications.initialize(
+    const InitializationSettings(android: androidSettings, iOS: iosSettings),
+  );
   
   const androidChannel = AndroidNotificationChannel(
-    'kidsecure_critical_alerts_v6',
+    'kidsecure_critical_alerts_v7',
     'Critical Alerts',
     description: 'Important notifications requiring immediate attention.',
     importance: Importance.max,
@@ -84,27 +91,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(androidChannel);
 
-  final androidDetails = AndroidNotificationDetails(
-    'kidsecure_critical_alerts_v6',
-    'Critical Alerts',
-    channelDescription: 'Important notifications requiring immediate attention.',
-    importance: Importance.max,
-    priority: Priority.high,
-    playSound: true,
-    sound: const RawResourceAndroidNotificationSound('alert'),
-    enableVibration: true,
-    enableLights: true,
-  );
-
-  const iosDetails = DarwinNotificationDetails(
-    presentAlert: true,
-    presentBadge: true,
-    presentSound: true,
-    sound: 'alert.wav',
-  );
-
-  final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
-
   final title = message.notification?.title ?? message.data['title'] ?? 'KidSecure';
   final body = message.notification?.body ?? message.data['body'] ?? '';
 
@@ -113,7 +99,25 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       message.hashCode,
       title,
       body,
-      details,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          sound: const RawResourceAndroidNotificationSound('alert'),
+          enableVibration: true,
+          enableLights: true,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: 'alert.wav',
+        ),
+      ),
       payload: jsonEncode(message.data),
     );
   }
@@ -146,7 +150,6 @@ void main() async {
 
   final authRepository = FirebaseAuthRepository();
   final attendanceRepository = FirebaseAttendanceRepository();
-  final broadcastRepository = FirebaseBroadcastRepository();
   final dismissalRepository = FirebaseDismissalRepository();
   final notificationRepository = FirebaseNotificationRepository();
   final statsRepository = FirebaseStatsRepository();
@@ -160,35 +163,10 @@ void main() async {
   final fcmV1Service = FcmV1Service(
     projectId: 'kid-86bbc',
     clientEmail: 'firebase-adminsdk-fbsvc@kid-86bbc.iam.gserviceaccount.com',
-    privateKey: '''-----BEGIN PRIVATE KEY-----
-MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQChtZvfmQBUDphp
-JQAleipvPvV4XOPk0GJAWGphyP5r4So8n/3ZrT24JSLOfuHlpkxQXvuOLXgkeqQ9
-Hc8uz0Rp14EoWT6+Su+7IoQ9xG/vGhnBWxREWjt+elJBtCdNjcyLK3LyspM3LrZ
-9++ieKiKkwcLAPNOWBo9pRRtLeNuR9OFKJU/0TjzPDGh9OEG7+tpcKF9CV3Kuw1f
-b5ZaHQIfeyymNk/cOnEKBrUktkT5TMMOpfM/VeplYmwzT4FgeHlbMAvdBaUdm70i
-95T4wPGo/dyaE4eLZCg0T8DXVke1Y0eZQTEMiXHZ/xHCy2nqJ1nPMwdJfZ1bYSOC
-Dcrc1CKhAgMBAAECggEAGmd5/SeRayg68Kgu/u+UsDd6g12/hGQWNuV48WCNUnYg
-nGePXpSwCDpgFZGYNxRRT6pCrvNzs5km6jVL8umrzg8jBeSIhYZcAz/CR4TgLAuK
-jI/RIOeT14+/7MGlHJZ2qsWq1yTUpXpBNEgMo93Jv17EfqJ4F+nA1yH2VOFySlZD
-mrmLSp4YEJ707+KNkq0DjYfOt2uIRQ7A7GJHLJjJ06P60QIs6v0Ra3EwQUTJymH4
-GRKjqZsg4Aj18limXv0WybtzXMNUxnp+z5MgjyvgnZ2PyRB1mvhu/uk3t09nj0Dm
-0fMC99J5ABnJ2N2LzGOofUTFrEb7S8LRROJWgW0NhQKBgQDOc93fgmoBBeX0cuxG
-lXkcr75c+dvJm5s7gqP6xqvVkxOAZBdCx7+y1c1gBPdY/Qqa2UJ+UkgSVAPu9tCk
-YmxKE979/Wzbit9yqPcPjx95kNtPDRVi0rQ+VxZnXFOht10b0g/50k4nuqfN9gTm
-+jXWDvhQmcCfFaFK0BOkX/P+UwKBgQDIhMncOmRCdcTq2DSQFD79XLkUa/d/EePM
-JD+e87uo/FJGWLqNZiclcYYoEOmZWew20xI+l0uNyHSqkCPXz0qCak9s17WmSpPI
-STNas/L0uKdvgy2vtCovTeuPlOqDYkY8Kz4EOkTWzMOEhRe887x68vCaAGo0ujQu
-67yWTz20uwKBgQC3xXnNuEflyztLonThy7H4MBQSrTLQvluq2HphAzH4NihY1D/E
-aQwiA6ECBMmsg+pJtnUy/sk6z2CE+Vz1xsrAEfogOtMIhhCq/u6VAgCxdJlTP8E2
-q3pYN6swrIWhYRhXaGBiL6r0QHmYo5Lvi/AaME8naAWHVnixoJCrc+I8EwKBgQCX
-JUDjeEBKuGsOeppkYF56rIH2GswcRGfpYQlzz1UNM+TwkcFNBEtNthzh5p2uslGT
-odaGx5Rz8z29s5jQ+7e2RlxINvD9wAlVV5gWLr5cKTRMohy17KA/uARv3lhHYLSA
-djfxB9sL7p0SLyCNlUvlgWpLKzTjOdhL5fXpdyGUMQKBgQCxVqnVCr98aMsVGZyK
-zkXmkfhrSw2sFxh2Z5JVNhlqSkJEbx4WJdbmSoUEX5VEKZtzDwqJZRJ1UsOX0YnR
-AuJlDqH1RXRgnaD97uyug2y8IVpd7PskbuHQRkF3pugO9UBM/M8u3IWZHg9ElpKB
-j2E6s9oNzFcpq62yk7utvVFTyQ==
------END PRIVATE KEY-----'''.trim(),
+    privateKey: '-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDFrX8V9bIF7N+5\nRB+gvQQtgPaHUg9s7b7HuBtaZAZiIiZ2ljrn8RgVEWftkbvVqnh32sFSnS/WrfK1\n04DYTq8phD+TWNjhjwPV/mh0HVavoKadR225Ih8UevdZDRtnclHEprmD4NlPE8Xo\nsN+2ehqjtb8EFJCopr3LIc5wKzOlu5e9E7SKGXArlJx+KO9Yp7bGx+ZOy5LUUMHC\n7Hfr6HW86qjTOTAdNr/5oOPqaZDwFjtTAThnCEmMNEZuUOjLTFLhVAC7DLs0gaeR\nj3URSaai477L1BcX3EpJHD90KM/AsEkShpFG8zqbSuXiwsFhJZoXoqBzwQmAfRF9\njimGB8WbAgMBAAECggEAAKOzCYsl7Eb74kmKIKb74HnOUlm9mwiZ2WOLExvHuYGK\nxk9uGVn6TfckcuxJw0Mt6JVYkr/Xa8ZcRqJMhGacwnGfEwbyjKg9xu9vvxBpO2A1\nqcSVYkft+c78Bdm5APipsw0nBHoxucPCnCIWVyzF8UmhOI4oeaMwcfvGAy7gl+Sm\nAFjUyhljVF4bCPVbSLcdKiBsr6P8WXDbTN5hSOk5KI1uW0DKe0YxXly5z+AX5zuy\nL2Cw2RodGApytIb0ljQxgolh1E+ohRyNybm70iDQqNasYjcUxT9AIMzKFrVjd6za\nemuNsKYAMulM0RukBsf1PNWfG2A262UemVd/KiX6YQKBgQDloCNF0JYDbxT97EYm\nUtpGjUPjyWPJqgzdzAWZlHnvlGdl19PYYd+4yKGl20YaL5vnGqljCWtFLM2UyXcJ\nes6BRbO61fxLDNJ9d2UvlirUug5AKZI1DHkCJ8oSzvAouxgvChyJMr1+cEpZ5bYq\nmiLvatXUyv6x9KLc2OMEXjcoZQKBgQDcYfi4eBdvclAJ9tjVAugmRhZZYshm1rIX\nA10F1tF1hf1VegKk76hdduu2Fn+BObdoqMt8QeLReBrs1/pWq1KxVILZlfwdHLon\nWYkCBm2RHsWHOKO2LSx9M4imAaBJ9rdQCsqAlv+UbNCSvbRGkeWpt9aG1QzabtL3\ntXVmyqlV/wKBgCglYUVZfIDJMQBcCL+2iJcBJ7dxhFLDulAk1W3OeasbZSB3JYCV\nTAoAedKHjbASVs2G6cp44RpNBPxYZMlxgR001IF73Ao7CaoJ79TsCjz68nbhTcCc\nl6N61WeIapCUdVv0Bp0uE9dBRp6E/N5h6G23Xf9AJltyi+7UtIwU9MvJAoGAKzzl\niXu2TV1GKs5NeG1bkrbJh7wDyXlx82XriEu/SKmDLJQFlMqYY84DLPR5C6eBPn1v\nfu+GSsafsbwmF38BeF02Vu5ASo3qT/IXGVidgo1g/8izBfkS83V65+cFxb0r9f5I\nALafakV3HnMtvXK+dm/lHQsLvIdlyMfHQuWcF40CgYBYcy5nqxf+PgAFuH/osoSc\nvIuaWOUSMUiNVY5jVr+AmhXoEZpqDSLEcAfc6NOhqxFZcRaLlEnEgYM0ywjyIssd\nI87EUr3UrRZRmGyp6DCUkIdwZnfqlC3MIt/fDuJLN68dRD13F0qJNmtDtCSFJ1dt\n2ZlvSyiRO8JtHPp2jj5ihA==\n-----END PRIVATE KEY-----\n',
   );
+
+  final broadcastRepository = FirebaseBroadcastRepository(fcmV1Service);
 
   runApp(
     MyApp(
